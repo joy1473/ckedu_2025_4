@@ -2,3 +2,4 @@ pymongo
 flask
 requests
 python-dotenv
+python-telegram-bot
