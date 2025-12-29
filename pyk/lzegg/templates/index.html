@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI 챗봇</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* 말풍선 공통 스타일 */
+        .message { max-width: 70%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.5; }
+        
+        /* 사용자 메시지 (오른쪽 정렬) */
+        .user-msg { align-self: flex-end; background-color: #007bff; color: white; border-bottom-right-radius: 2px; }
+        
+        /* AI 메시지 (왼쪽 정렬) */
+        .ai-msg { align-self: flex-start; background-color: #e9e9eb; color: #333; border-bottom-left-radius: 2px; }
+
+        .input-area { padding: 20px; background: white; border-top: 1px solid #ddd; display: flex; gap: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="chat-window"></div>
+
+<div class="input-area">
+    <input type="text" id="user-input" placeholder="메시지를 입력하세요..." onkeypress="if(event.keyCode==13) sendMessage()">
+    <button onclick="sendMessage()">전송</button>
+</div>
+
+<script>
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const chatWindow = document.getElementById('chat-window');
+        const text = input.value;
+        if (!text) return;
+
+        // 1. 사용자 메시지 화면에 추가 (우측)
+        chatWindow.innerHTML += `<div class="message user-msg">${text}</div>`;
+        input.value = '';
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+
+        // 2. 백엔드에 전송
+        const formData = new FormData();
+        formData.append('message', text); // 이 이름이 파이썬의 (message: str)와 같아야 함
+
+        const response = await fetch('/chat', { method: 'POST', body: formData });
+        const data = await response.json();
+
+        // 3. AI 답변 화면에 추가 (좌측)
+        chatWindow.innerHTML += `<div class="message ai-msg">${data.response}</div>`;
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
