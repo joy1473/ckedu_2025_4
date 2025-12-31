@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>모의투자 AI 주식 분석 및 주문 테스트</title>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; padding: 40px; text-align: center; background: #f1f5f9; color: #1e293b; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        h1 { font-size: 24px; margin-bottom: 10px; }
+        p { color: #64748b; margin-bottom: 30px; }
+        
+        /* 분석 리포트 버튼 */
+        .btn-report { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer; background: #1e293b; color: white; border: none; border-radius: 8px; margin-bottom: 25px; transition: background 0.2s; }
+        .btn-report:hover { background: #334155; }
+
+        /* AI 명령어 섹션 */
+        .ai-section { 
+            border-top: 2px dashed #e2e8f0; 
+            padding-top: 25px; /* pt 대신 padding-top */
+            text-align: left; 
+        }
+        .ai-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .input-group { display: flex; gap: 8px; }
+        input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+        input:focus { 
+            border-color: #3b82f6; 
+            outline: none; 
+            box-shadow: 0 0 0 2px #bfdbfe; /* ring 효과 대신 box-shadow 사용 */
+        }
+        .btn-send { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-send:hover { background: #2563eb; }
+
+        /* 결과 표시 창 */
+        #aiResponseResult { margin-top: 15px; padding: 12px; border-radius: 6px; font-size: 13px; min-height: 40px; display: none; background: #f8fafc; border: 1px solid #e2e8f0; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📊 모의투자 AI 주식 관리 테스트 보드</h1>
+        <p>모의투자 분석 리포트 확인 및 모의투자 AI 주문 기능을 테스트합니다.</p>
+        
+        <button class="btn-report" onclick="getEscAnalysisTest('user1')">
+            📈 모의투자 성공 사례 자산 분석 리포트 팝업 열기
+        </button>
+
+        <div class="ai-section">
+            <div class="ai-title">🤖 모의투자 AI 주식 주문 테스트</div>
+            <div class="input-group">
+                <input type="text" id="aiCommandInput" placeholder="'삼성전자 5주 매수해줘' 라고 입력해보세요" 
+                       onkeypress="if(event.keyCode==13) testAiCommand()">
+                <button class="btn-send" onclick="testAiCommand()">전송</button>
+            </div>
+            <div id="aiResponseResult"></div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * [기능 1] 분석 리포트 팝업창 실행
+         * @description 사용자별 투자 분석 데이터를 보여주는 새 브라우저 팝업창을 중앙에 배치하여 실행
+         * @param {string} in_userId - 리포트를 조회할 사용자 식별 ID
+         */
+        function getEscAnalysisTest(in_userId) {
+            // 1. 화면의 실제 사용 가능한 너비와 높이 계산
+            const width = Math.min(screen.availWidth, 1200); // 최대 1200px로 제한하거나
+            const height = Math.min(screen.availHeight, 800);
+            
+            // 2. 화면 중앙 배치를 위한 좌표 계산
+            const left = (screen.availWidth - width) / 2;
+            const top = (screen.availHeight - height) / 2;
+
+            const popupUrl = `${window.location.origin}/show-popupEsc?in_userId=${in_userId}`;
+            
+            // 3. 팝업 옵션 문자열
+            const specs = `width=${width},height=${height},left=${left},top=${top},` +
+                        `menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`;
+
+            window.open(popupUrl, "AnalysisReport", specs);
+        }
+
+        /**
+         * [기능 2] AI 명령어 전송 및 응답 처리 (비동기)
+         * @description 사용자의 입력 명령어를 서버(FastAPI)에 FormData 형태로 전송하고 분석 결과를 화면에 렌더링
+         */
+        async function testAiCommand() {
+            const input = document.getElementById('aiCommandInput');
+            const resultDiv = document.getElementById('aiResponseResult');
+            const command = input.value.trim();
+
+            if (!command) {
+                alert("명령어를 입력해주세요.");
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = "⏳ AI가 명령을 분석 중입니다...";
+
+            try {
+                // FormData 객체 생성 (FastAPI의 Form(...)을 받기 위함)
+                const formData = new FormData();
+                formData.append('in_message', command);
+                formData.append('in_user_id', 'user1'); // 테스트용 ID
+                formData.append('in_invest_amount', '10000000');
+
+                const response = await fetch('/esc/chatEsc', { // 경로 수정: /api/ai-order -> /esc/chatEsc
+                    method: 'POST',
+                    body: formData // JSON 대신 formData 전송
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.style.color = '#059669';
+                    // 서버 응답이 {"response": "..."} 형태이므로 data.response 출력
+                    resultDiv.innerHTML = `✅ <b>AI 응답:</b><br>${data.response}`;
+                } else {
+                    throw new Error('서버 응답 오류');
+                }
+            } catch (error) {
+                resultDiv.style.color = '#dc2626';
+                resultDiv.innerHTML = `❌ <b>오류 발생:</b><br>서버 연결을 확인하세요. (경로: /esc/chatEsc)`;
+            }
+        }
+    </script>
+</body>
+</html>

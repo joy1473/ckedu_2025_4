@@ -1,0 +1,3 @@
+python -m uvicorn appPyk:app --reload
+
+C:\ckedu_2025_4\pyk\lzegg

@@ -1,0 +1,17 @@
+[
+    { "code": "005930", "name": "삼성전자", "currentPrice": 74200, "buyPrice": 68500, "quantity": 150, "category": "전기전자" },
+    { "code": "000660", "name": "SK하이닉스", "currentPrice": 185300, "buyPrice": 142000, "quantity": 40, "category": "전기전자" },
+    { "code": "373220", "name": "LG에너지솔루션", "currentPrice": 395000, "buyPrice": 420000, "quantity": 15, "category": "화학" },
+    { "code": "207940", "name": "삼성바이오로직스", "currentPrice": 812000, "buyPrice": 790000, "quantity": 5, "category": "의약품" },
+    { "code": "005380", "name": "현대차", "currentPrice": 252000, "buyPrice": 210000, "quantity": 30, "category": "운수장비" },
+    { "code": "035420", "name": "NAVER", "currentPrice": 188000, "buyPrice": 205000, "quantity": 60, "category": "서비스업" },
+    { "code": "000270", "name": "기아", "currentPrice": 118000, "buyPrice": 95000, "quantity": 45, "category": "운수장비" },
+    { "code": "068270", "name": "셀트리온", "currentPrice": 178500, "buyPrice": 182000, "quantity": 25, "category": "의약품" },
+    { "code": "105560", "name": "KB금융", "currentPrice": 72000, "buyPrice": 58000, "quantity": 100, "category": "금융업" },
+    { "code": "005490", "name": "POSCO홀딩스", "currentPrice": 382000, "buyPrice": 450000, "quantity": 12, "category": "철강금속" },
+    { "code": "035720", "name": "카카오", "currentPrice": 48500, "buyPrice": 52000, "quantity": 120, "category": "서비스업" },
+    { "code": "003670", "name": "포스코퓨처엠", "currentPrice": 265000, "buyPrice": 310000, "quantity": 20, "category": "화학" },
+    { "code": "012330", "name": "현대모비스", "currentPrice": 235000, "buyPrice": 220000, "quantity": 18, "category": "운수장비" },
+    { "code": "066570", "name": "LG전자", "currentPrice": 105000, "buyPrice": 98000, "quantity": 35, "category": "전기전자" },
+    { "code": "032830", "name": "삼성생명", "currentPrice": 92000, "buyPrice": 85000, "quantity": 50, "category": "보험" }
+]
