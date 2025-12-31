@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>오픈뱅킹 사용자 인증 결과</title>
+  </head>
+  <body>
+    <div id="message"></div>
+    <script>
+      const _result_ = '{{ data["result"] }}';
+      const _message_ = '{{ data["message"] }}';
+      const _bank_name_ = '{{ data["bank_name"] }}';
+      const _account_num_masked_ = '{{ data["account_num_masked"] }}';
+      const _account_holder_name_ = '{{ data["account_holder_name"] }}';
+      let msg = '';
+      msg = `<div>인증 결과 : <strong>${_result_ === '1' ? '성공' : '실패'}</strong></div>`;
+      msg += `<div>은행명 : <strong>${_bank_name_}</strong></div>`;
+      msg += `<div>마스킹된 출력용 계좌번호 : <strong>${_account_num_masked_}</strong></div>`;
+      msg += `<div>예금주 : <strong>${_account_holder_name_}</strong></div>`;
+      document.getElementById('message').innerHTML = msg;
+      /*
+      const resultData = {
+        type: 'auth',
+        success: _result_ === '1',
+        message: message,
+      };
+      if (window.opener) {
+        window.opener.postMessage(resultData, '*');
+      }
+      window.close();
+      //*/
+    </script>
+  </body>
+</html>

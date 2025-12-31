@@ -37,8 +37,8 @@ OPENBANK_DOMAIN = "https://openapi.openbanking.or.kr"
 OPENBANK_DOMAIN = "https://testapi.openbanking.or.kr"
 OPENBANK_REDIRECT_URI = "http://localhost:5050/auth/callback/"
 OPENBANK_TOKEN_URL = f"{OPENBANK_DOMAIN}/oauth/2.0/token"
-accountinfo_api_tran_id = os.getenv("accountinfo_api_tran_id")
-accountinfo_list_num = os.getenv("accountinfo_list_num")
+#accountinfo_api_tran_id = os.getenv("accountinfo_api_tran_id")
+#accountinfo_list_num = os.getenv("accountinfo_list_num")
 
 def get_user_info(in_user_id: str):
   """사용자 정보 반환 : MongoDB 연결 필요
@@ -47,23 +47,26 @@ def get_user_info(in_user_id: str):
     in_user_id (str): 사용자ID (필수)
   
   Returns:
+    out_code (str): 인증시 받은 코드
     out_access_token (str): 오픈뱅킹 발급 토큰
     out_user_name (str): 오픈뱅킹 발급 토큰
     out_user_seq_no (str): 오픈뱅킹 사용자일련번호
   """
   logger.debug('*** get_check ***')
   logger.debug(f'in_user_id:{in_user_id}')
+  out_code = ''
   out_user_name = ''
   out_user_seq_no = ''
   out_access_token = ''
   return {
+    "out_code": out_code,
     "out_access_token": out_access_token,
     "out_user_name": out_user_name,
     "out_user_seq_no": out_user_seq_no
   }
 
 def get_account_list(in_user_id: str, in_sort_order_descending: bool | None = True):
-  """오픈뱅킹 계좌통합조회
+  """오픈뱅킹 등록계좌조회
   
   Args:
     in_user_id (str): 사용자ID (필수)
@@ -112,8 +115,68 @@ def get_account_list(in_user_id: str, in_sort_order_descending: bool | None = Tr
     "sort_order": sort_order
   }
   
+  query_string = "&".join([f"{k}={v}" for k, v in params.items()])
+  url = f"{OPENBANK_DOMAIN}/v2.0/account/list?{query_string}"
+  response = requests.get(url, headers=headers)
+
+  if response.status_code == 200:
+    result_data['out_success'] = True
+    result_data['out_list'] = response.json()
+  else:
+    result_data['out_message'] = "오픈뱅킹 계좌통합조회 오류"
+    #result_data['out_detail'] = response.json()
+
+  return result_data
+
+def get_accountinfo_list(in_user_id: str, in_inquiry_bank_type: str, in_trace_no: str, in_inquiry_record_cnt: str):
+  """오픈뱅킹 계좌통합조회
+  
+  Args:
+    in_user_id (str): 사용자ID (필수)
+    in_inquiry_bank_type (str(1)): 금융기관 업권 구분 (필수 “1”:은행, “2”:상호금융기관, “4”:금융투자회사)
+    in_trace_no (str(6)): 지정 번호 (필수). 조회하고자 하는 내역의 시작번호를 입력하며, 첫 요청시에는 ‘1’을 입력해야 함.
+    in_inquiry_record_cnt (str): 조회 건수 (필수). 한 번에 조회하려는 데이터 건수를 입력하며, 최대 조회 가능한 건수는 30 건임.
+  
+  Returns:
+    out_success (bool): 성공 여부
+    out_message (str): 에러 메세지
+    out_list (list): 계좌 목록
+  """
+  logger.debug('*** get_accountinfo_list ***')
+  logger.debug(f'in_user_id:{in_user_id}')
+  logger.debug(f'in_inquiry_bank_type:{in_inquiry_bank_type}')
+  logger.debug(f'in_trace_no:{in_trace_no}')
+  logger.debug(f'in_inquiry_record_cnt:{in_inquiry_record_cnt}')
+  
+  result_data = {
+    'out_success': False
+  }
+  
+  # 사용자ID가 빈 값일 때 오류
+  if not in_user_id: 
+    result_data['out_message'] = "in_user_id not found"
+    return result_data
+  
+  # 사용자 정보 조회
+  user_data = get_user_info(in_user_id)
+  access_token = user_data['out_access_token']
+  auth_code = user_data['out_code']
+  logger.debug(f'access_token:{access_token}')
+  logger.debug(f'auth_code:{auth_code}')
+
+  headers = {
+    'Authorization': f'Bearer {access_token}',
+    'Content-Type': 'application/json; charset=UTF-8'
+  }
+  params = {
+    "auth_code": auth_code,
+    "inquiry_bank_type": in_inquiry_bank_type,
+    "trace_no": in_trace_no,
+    "inquiry_record_cnt": in_inquiry_record_cnt
+  }
+  
   url = f"{OPENBANK_DOMAIN}/v2.0/accountinfo/list"
-  response = requests.get(url, data=params, headers=headers)
+  response = requests.post(url, data=params, headers=headers)
 
   if response.status_code == 200:
     result_data['out_success'] = True
