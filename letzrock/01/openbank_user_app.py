@@ -94,7 +94,7 @@ def auth_callback():
     print('사용자 토큰발급 (3-legged) :', token_data)
     user_seq_no = token_data['user_seq_no']
     user_access_token = token_data['access_token']
-    token_data['auth_code'] = code
+    token_data['code'] = code
     with open('사용자_토큰_정보.json', 'w', encoding='utf-8') as f:
       f.write(json.dumps(token_data))
       f.close()
