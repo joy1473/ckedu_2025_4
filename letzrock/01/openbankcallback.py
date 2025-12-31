@@ -7,7 +7,6 @@ import os
 import urllib.parse
 import secrets
 import string
-from app_1 import get_auth_url
 
 load_dotenv()
 
@@ -16,7 +15,7 @@ app = Flask(__name__)
 # .env에서 키 로드
 CLIENT_ID = os.getenv("OPENBANK_CLIENT_ID")
 CLIENT_SECRET = os.getenv("OPENBANK_CLIENT_SECRET")
-REDIRECT_URI = "http://localhost:5050/auth/callback/"  # 콜백 주소
+REDIRECT_URI = "http://localhost:5050/auth/callback"  # 콜백 주소
 
 # 테스트 환경 URL
 AUTH_URL = "https://testapi.openbanking.or.kr/oauth/2.0/authorize"
@@ -24,6 +23,10 @@ TOKEN_URL = "https://testapi.openbanking.or.kr/oauth/2.0/token"
 
 accountinfo_api_tran_id = os.getenv("accountinfo_api_tran_id")
 accountinfo_list_num = os.getenv("accountinfo_list_num")
+print(CLIENT_ID)
+print(CLIENT_SECRET)
+print(accountinfo_api_tran_id)
+print(accountinfo_list_num)
 
 # 안전한 랜덤 키 생성 함수 (문자 포함)
 def generate_secure_key(length=12):
@@ -55,7 +58,7 @@ def login():
         "scope": "login inquiry transfer",
         "state": generate_secure_key(32),
         "auth_type": "0",  # 최초인증
-        "accountinfo_yn": accountinfo_yn if accountinfo_yn == 'Y' else '',
+        "accountinfo_yn": accountinfo_yn,
         "accountinfo_api_tran_id":accountinfo_api_tran_id if accountinfo_yn == 'Y' else '',
         "accountinfo_list_num": accountinfo_list_num if accountinfo_yn == 'Y' else '',
     }
@@ -75,9 +78,11 @@ def callback():
     error_description = request.args.get("error_description")
     print(f"code:{code}")
     print(f"state:{state}")
+    print(f"error:{error}")
+    print(f"error_description:{error_description}")
 
     if error:
-        return f"<h2>오픈뱅킹 인증 실패</h2><p>Error: {error} {error_description}</p>"
+        return f"<h2>오픈뱅킹 인증 실패</h2><p>Error: {error}</p>"
 
     if not code:
         return "<h2>코드가 없습니다. 인증 실패</h2>"
