@@ -20,8 +20,6 @@ root/                          # [프로젝트 최상위]
         └── templates/         # UI 파일 (index.html)
 
 ##.gitignore 파일 내용입니다(git커밋방지)
-
-```text
 venv/
 .env
 __pycache__/
@@ -29,28 +27,20 @@ __pycache__/
 db.sqlite3
 
 ##.env 파일 내용입니다
-
-```text
 OPENBANK_CLIENT_ID=...
 OPENBANK_CLIENT_SECRET=...
 OPENAI_API_KEY=sk-proj-Sq6nCoXXVuaaBi...[개인openAI KEY]
 MONGO_URL=mongodb+srv://계정:비밀번호@ckedu20254.jdcow7k.mongodb.net/
 
 ##requirement.txt 작성법 및 설치명령
-
-```text
 pip freeze > requirements.txt
 pip install -r requirements.txt
 
 ##fastapi 실행명령
-
-```text
 cd C:\ckedu_2025_4\
 uvicorn pyk.lzegg.appPyk:app --reload
 
 ##git 파일전송 방법
-
-```text
 1) vsocde에서 ctrl+shift+g 누르세요.
 2)상단에 있는 점 세 개(...) 아이콘을 누릅니다.
 -[끌어오기(Pull)] 메뉴를 클릭하면 끝! 
@@ -67,8 +57,6 @@ uvicorn pyk.lzegg.appPyk:app --reload
 - 이제 원격 서버(Git)로 파일이 전송됩니다.
 
 ## git 명령어
-
-```text
 1) 서버 최신 내용 받기
 git pull
 2)변경된 모든 파일을 장바구니에 담기 (Stage)
@@ -79,8 +67,6 @@ git commit -m "feat: 가상 주식 투자 프로젝트 초기화"
 git push origin main
 
 ##자주 쓰는 커밋 머리말(Prefix) 목록
-
-```text
 ​보통 타입: 내용 형식으로 작성합니다.
 • ​feat: 새로운 기능을 추가했을 때 (예: feat: 음성 인식 주문 기능 추가)
 • ​fix: 버그를 수정했을 때 (예: fix: 로그인 오류 수정)
