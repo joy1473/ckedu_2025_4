@@ -89,16 +89,3 @@ lua_config.py 내의 페르소나 매칭 로직 관리.
 
 ---
 
-### 업데이트 방법은 다음과 같습니다:
-
-1.  **파일 수정:** VS Code에서 `D:\AIclass02\lua_core_prompt\README.md` 파일을 열고 위 내용을 전체 붙여넣기 후 저장하세요.
-2.  **명령어 실행:** 터미널에서 아래 명령어를 순서대로 입력하여 GitHub에 반영하세요.
-
-```powershell
-# 1. 변경된 내용을 저장소 폴더로 복사
-robocopy ..\lua_core_prompt .\sjhong76 /mir /xd venv .git
-
-# 2. GitHub 업로드
-git add sjhong76
-git commit -m "docs: 프롬프트 관리 시스템(lua_config) 내용 README에 추가"
-git push origin main
