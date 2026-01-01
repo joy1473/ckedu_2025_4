@@ -33,14 +33,14 @@ Markdown
   "risk_level": 1,
   "risk_label": "매우 공격형"
 }
-4. Case/Policy 핵심 규칙
+##4. Case/Policy 핵심 규칙
 Case Override: is_minor == true 시 무조건 case_id = case_05 (또는 전용 케이스) 강제.
 
 Consent Rule: 미동의 시 READY 진입은 가능하나 실전 거래 기능 차단.
 
 Persona Match: case_id에 따라 lua_config.py에서 시스템 프롬프트 자동 매칭.
 
-5. 프롬프트 관리 시스템 (Prompt Management)
+##5. 프롬프트 관리 시스템 (Prompt Management)
 주인님(기획자)이 파이썬 코드를 수정하지 않고도 AI의 말투를 바꿀 수 있도록 폴더 기반 관리 체계를 사용합니다.
 
 📁 폴더 구조
@@ -57,7 +57,7 @@ Persona Match: case_id에 따라 lua_config.py에서 시스템 프롬프트 자�
 
 함수: get_lua_policy(user_state) 호출 시 {프롬프트, 추천메뉴, UI모드} 반환.
 
-6. lua_core 연동 계약 (Chat API)
+##6. lua_core 연동 계약 (Chat API)
 READY 상태 이후의 모든 채팅 요청은 아래 메타 데이터를 포함해야 합니다.
 
 📨 Request Payload
@@ -68,7 +68,7 @@ JSON
   "message": "현재 시장 상황 어때?",
   "user_state": { "case_id": "case_01", "is_minor": false, "risk_level": 1 }
 }
-7. R&R (역할 분담)
+##7. R&R (역할 분담)
 📱 Frontend 책임
 상태 머신 진행 및 UI/UX 렌더링, 입력값 1차 검증.
 
