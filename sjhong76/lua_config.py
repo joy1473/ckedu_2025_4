@@ -1,75 +1,82 @@
 # lua_config.py (홍상진 주인님 관리 파일)
 import os
 
-# 1. 파일 시스템에서 프롬프트를 읽어오는 공통 함수
+# 1. 파일 로드 공통 함수
 def load_prompt_file(folder, filename):
-    """
-    lua_core_prompt 내의 각 카테고리 폴더에서 .txt 파일을 읽어옵니다.
-    """
-    # lua_config.py 파일이 있는 현재 위치를 기준으로 경로 설정
     base_path = os.path.dirname(os.path.abspath(__file__))
-    
-    # 해당 폴더 내의 파일 경로 생성
     file_path = os.path.join(base_path, folder, filename)
     
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read().strip()
     except FileNotFoundError:
-        # 파일이 없을 경우 시스템 중단을 방지하기 위해 경고 문구 반환
-        return f"[경고] {filename} 파일이 {folder} 폴더에 없습니다. 내용을 확인해주세요."
+        return ""
 
-# 2. 정책 결정 및 프롬프트 조립 엔진 (lua_policy 핵심 로직)
-def get_lua_policy(user_state: dict):
+# 2. 유저 메시지 의도 판별 로직
+def detect_task_intent(message):
     """
-    사용자의 온보딩 데이터(UserState)를 기반으로 
-    최종 시스템 프롬프트, UI 모드, 권한 등을 결정하여 반환합니다.
+    유저의 메시지를 분석하여 주식(stock)인지 뱅킹(banking)인지 판별합니다.
+    """
+    stock_triggers = ["주식", "매수", "매도", "사줘", "팔아", "코스피", "나스닥", "시세"]
+    banking_triggers = ["이체", "송금", "보내줘", "잔액", "계좌", "입금", "출금"]
+    
+    if any(trigger in message for trigger in stock_triggers):
+        return "stock"
+    if any(trigger in message for trigger in banking_triggers):
+        return "banking"
+    return "general"
+
+# 3. 통합 정책 결정 엔진
+def get_lua_policy(user_state: dict, user_message: str):
+    """
+    페르소나 + 업무 지침 + 성향 데이터를 조합하여 최종 시스템 프롬프트를 생성합니다.
     """
     case_id = user_state.get("case_id", "case_unknown")
     is_minor = user_state.get("is_minor", False)
     consent = user_state.get("consent_investment_risk", False)
+    risk_label = user_state.get("risk_label", "미지정")
 
-    # 기본 설정 (초기값)
     policy = {
-        "system_prompt": load_prompt_file("intro", "welcome.txt"),
-        "recommended_menu": ["채팅하기"],
+        "system_prompt": "",
+        "recommended_menu": ["메인으로"],
         "ui_mode": "standard",
         "is_allowed": True
     }
 
-    # [규칙 1] 미성년자 (최우선순위: persona/kid_learner.txt 활용)
+    # [1단계] 페르소나(말투) 결정
     if is_minor:
         policy["system_prompt"] = load_prompt_file("persona", "kid_learner.txt")
-        policy["recommended_menu"] = ["경제 퀴즈", "모의투자 연습"]
-        policy["ui_mode"] = "education"
-        policy["is_allowed"] = False
-        return policy
-
-    # [규칙 2] 케이스별 페르소나 매칭 (persona 폴더 내 txt 파일 활용)
-    # 이미지로 주신 폴더 내 파일명과 매칭했습니다.
-    persona_files = {
-        "case_01": "mz_aggressive.txt",
-        "case_02": "office_worker.txt",
-        "case_03": "retiree_safe.txt",
-        "case_04": "young_worker.txt",
-        "case_05": "young_worker.txt" # 필요 시 전용 파일(자산가 등)로 변경 가능
-    }
-
-    if case_id in persona_files:
-        # 선택된 케이스의 페르소나 파일 내용을 시스템 프롬프트로 로드
-        policy["system_prompt"] = load_prompt_file("persona", persona_files[case_id])
-    
-    # [규칙 3] 투자 성향 결과 및 동의 여부에 따른 문구 결합
-    if consent:
-        # 투자 성향 진단 결과 문구 추가 (suitability/result.txt)
-        policy["system_prompt"] += "\n\n[투자 성향 정보]\n" + load_prompt_file("suitability", "result.txt")
     else:
-        # 동의 거부 시 안내 문구 추가 (consent/consent_decline.txt)
-        policy["system_prompt"] += "\n\n[알림]\n" + load_prompt_file("consent", "consent_decline.txt")
-        policy["is_allowed"] = False
+        persona_map = {
+            "case_01": "mz_aggressive.txt",
+            "case_02": "office_worker.txt",
+            "case_03": "retiree_safe.txt",
+            "case_04": "young_worker.txt",
+            "case_05": "young_worker.txt"
+        }
+        policy["system_prompt"] = load_prompt_file("persona", persona_map.get(case_id, "young_worker.txt"))
 
-    # [규칙 4] 특정 케이스 UI 모드 변경 (CASE 03: 은퇴자)
-    if case_id == "case_03":
-        policy["ui_mode"] = "easy_mode"
+    # [2단계] 업무 지침(Task) 결합
+    intent = detect_task_intent(user_message)
+    if intent == "stock":
+        task_content = load_prompt_file("task", "stock.txt")
+        # 프롬프트 내 변수({risk_label}) 치환
+        task_content = task_content.replace("{risk_label}", risk_label)
+        policy["system_prompt"] += f"\n\n### [현재 업무 지침: 주식]\n{task_content}"
+        policy["recommended_menu"] = ["인기 종목 조회", "나의 자산 보기"]
+    
+    elif intent == "banking":
+        task_content = load_prompt_file("task", "banking.txt")
+        policy["system_prompt"] += f"\n\n### [현재 업무 지침: 뱅킹]\n{task_content}"
+        policy["recommended_menu"] = ["계좌 이체", "최근 내역"]
+
+    # [3단계] 권한 및 성향 정보 추가
+    if consent:
+        suitability_res = load_prompt_file("suitability", "result.txt")
+        policy["system_prompt"] += f"\n\n[사용자 투자 정보]\n{suitability_res}"
+    else:
+        consent_decline = load_prompt_file("consent", "consent_decline.txt")
+        policy["system_prompt"] += f"\n\n[권한 알림]\n{consent_decline}"
+        policy["is_allowed"] = False
 
     return policy
