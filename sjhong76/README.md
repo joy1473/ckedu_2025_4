@@ -81,7 +81,7 @@ lua_config.py를 임포트하여 get_lua_policy() 실행.
 
 산출된 시스템 프롬프트를 LLM(OpenAI 등)에 주입하여 답변 생성.
 
-✍️ Prompt Engineering (홍상진 주인님)
+✍️ 홍상진 role: Prompt Engineering
 lua_core_prompt 내 각 폴더의 .txt 파일 내용 수정 및 관리.
 
 lua_config.py 내의 페르소나 매칭 로직 관리.
