@@ -1,148 +1,100 @@
-# 온보딩 상태 머신 정의서
-## LUA Onboarding Contract (1-page)
+[최종본] 업데이트된 README.md (통 코드)
+Markdown
 
-### 1) 상태 머신 (Frontend State Machine)
-**States**
-* INTRO → NAME → BIRTHDATE → GENDER → CONSENT → SUITABILITY_Q1 → SUITABILITY_Q2 → SUITABILITY_Q3 → SUITABILITY_Q4 → READY
+# 🚀 LUA Onboarding & Prompt Management Contract
 
-**Transitions**
-* INTRO → NAME: 첫 입력 또는 “시작” 버튼
-* NAME → BIRTHDATE: 실명 유효
-* BIRTHDATE → GENDER: 생년월일(YYYYMMDD) 유효
-* GENDER → CONSENT: 성별(M/F) 유효
-* CONSENT → SUITABILITY_Q1: 동의(true)
-* CONSENT → READY: 비동의(false) (제한 모드로 READY 진입)
-* SUITABILITY_Q1 → Q2 → Q3 → Q4 → READY: 각 문항 선택 유효
-
-**Optional**
-* “이전” 입력 시 직전 상태로 1-step back (덮어쓰기 허용)
-* 새로고침/재접속: 마지막 상태 복원(세션 저장)
+본 문서는 **LUA 서비스**의 온보딩 상태 머신, 입력 검증 규칙, 그리고 `lua_config.py`를 통한 폴더 기반 프롬프트 관리 체계를 정의합니다.
 
 ---
 
-### 2) 입력 검증 규칙 (Validation Rules)
-* **NAME (실명 필수)**
-    * trim 후 길이 2~20 권장
-    * 닉네임 의심 규칙(예): 숫자/특수문자 포함 과다, 1글자, test/guest/익명 등
-    * 의심 시: “실명으로 다시” 재요청 후 상태 유지
-* **BIRTHDATE**
-    * 정규식: `^\d{8}$` (예: 19900123)
-    * 실제 날짜 유효성 검사
-    * is_minor 계산 (정책 기준: 만 19세 미만 등 팀에서 상수화)
-* **GENDER (필수)**
-    * 입력 허용: 남/여, 남자/여자, M/F 등
-    * 내부 정규화: M 또는 F
-* **CONSENT (필수)**
-    * 값: true/false (UI에선 “동의/비동의” 또는 1/2)
-* **SUITABILITY_Q1~Q4**
-    * 각 문항 선택지 번호만 허용(1~3 또는 1~4)
-    * 유효하지 않으면 재질문
+## 1. 온보딩 상태 머신 (Frontend State Machine)
+
+### 🔄 상태 전이도 (States & Transitions)
+* **INTRO** → **NAME** → **BIRTHDATE** → **GENDER** → **CONSENT** → **SUITABILITY(Q1~Q4)** → **READY**
+* **특이사항:** “이전” 입력 시 1-step back 지원, 새로고침 시 세션 복원(Persistence).
 
 ---
 
-### 3) 저장 데이터 모델 (User Profile / Session)
-온보딩 도중에도 저장(중단 복원용), 완료 시 확정.
+## 2. 입력 검증 규칙 (Validation Rules)
+* **NAME:** 2~20자 실명 권장 (닉네임/테스트 계정 필터링)
+* **BIRTHDATE:** `YYYYMMDD` 형식 (만 19세 기준 `is_minor` 판정)
+* **GENDER:** M/F 정규화 저장
+* **CONSENT:** 실전 투자 위험 고지 동의 여부 (`true`/`false`)
 
+---
+
+## 3. 저장 데이터 모델 (User Profile / Session)
 ```json
 {
   "real_name": "홍길동",
-  "birthdate": "19900123",
-  "gender": "M",
   "is_minor": false,
-  "case_id": "case_04",
-  "persona_id": "young_worker",
+  "case_id": "case_01",
   "consent_investment_risk": true,
-  "suitability_answers": {"q1": 1, "q2": 3, "q3": 2, "q4": 1},
-  "risk_score": 9,
-  "risk_level": 4,
-  "risk_label": "안정형"
+  "risk_level": 1,
+  "risk_label": "매우 공격형"
 }
-4) Case/Policy 핵심 규칙 (Backend or Orchestrator)
-Case Override
+4. Case/Policy 핵심 규칙
+Case Override: is_minor == true 시 무조건 case_id = case_05 (또는 전용 케이스) 강제.
 
-is_minor == true → case_id = case_05 강제 (최상위 우선순위)
+Consent Rule: 미동의 시 READY 진입은 가능하나 실전 거래 기능 차단.
 
-성인일 때 case 확정이 아직이면 case_unknown 허용 가능
+Persona Match: case_id에 따라 lua_config.py에서 시스템 프롬프트 자동 매칭.
 
-Consent Rule
+5. 프롬프트 관리 시스템 (Prompt Management)
+주인님(기획자)이 파이썬 코드를 수정하지 않고도 AI의 말투를 바꿀 수 있도록 폴더 기반 관리 체계를 사용합니다.
 
-consent_investment_risk == false: READY 진입은 허용
+📁 폴더 구조
+/intro: 환영 메시지 및 단계별 안내 (welcome.txt 등)
 
-단, lua_core에서 “실전 투자/주문/행동 유도” 관련 기능 제한
+/persona: 케이스별 AI 인격 정의 (mz_aggressive.txt, retiree_safe.txt 등)
 
-Suitability Rule
+/suitability: 투자 성향 결과 문구 (result.txt)
 
-Q1~Q4 완료 시 risk_score/risk_level/risk_label 확정 저장
+/consent: 동의/거부 관련 안내 문구 (consent_decline.txt)
 
-확정 값은 READY 이후 모든 채팅에 주입
+⚙️ 로직 로더 (lua_config.py)
+역할: 위 폴더의 .txt 파일들을 읽어 user_state에 맞는 최적의 시스템 프롬프트를 조립합니다.
 
-5) Risk Classification Contract (Implementation-agnostic)
-Inputs: suitability_answers: {q1, q2, q3, q4} (옵션 번호)
+함수: get_lua_policy(user_state) 호출 시 {프롬프트, 추천메뉴, UI모드} 반환.
 
-Scoring
+6. lua_core 연동 계약 (Chat API)
+READY 상태 이후의 모든 채팅 요청은 아래 메타 데이터를 포함해야 합니다.
 
-Q1 목표: ① 3점, ② 2점, ③ 1점
-
-Q2 기간: ① 1점, ② 2점, ③ 3점, ④ 4점
-
-Q3 손실: ① 1점, ② 2점, ③ 3점, ④ 4점
-
-Q4 경험: ① 1점, ② 2점, ③ 3점, ④ 4점
-
-Mapping (Total Score → risk_level)
-
-4 ~ 6 → 5 (매우 안정형)
-
-7 ~ 9 → 4 (안정형)
-
-10 ~ 12 → 3 (중립형)
-
-13 ~ 15 → 2 (공격형)
-
-16+ → 1 (매우 공격형)
-
-Outputs: risk_score, risk_level(1~5), risk_label
-
-6) lua_core 연동 계약 (Chat API → lua_core)
-READY 이후, 모든 채팅 요청은 아래 메타를 포함해야 함.
-
-Chat Request Payload (최소)
-
+📨 Request Payload
 JSON
 
 {
-  "user_id": "string",
-  "message": "string",
-  "user_state": {
-    "case_id": "case_04",
-    "persona_id": "young_worker",
-    "is_minor": false,
-    "consent_investment_risk": true,
-    "risk_level": 4,
-    "risk_label": "안정형"
-  }
+  "user_id": "sjhong76",
+  "message": "현재 시장 상황 어때?",
+  "user_state": { "case_id": "case_01", "is_minor": false, "risk_level": 1 }
 }
-lua_core Output
+7. R&R (역할 분담)
+📱 Frontend 책임
+상태 머신 진행 및 UI/UX 렌더링, 입력값 1차 검증.
 
-항상 JSON Schema 강제 (summary/explanation/risk_warning/next_actions/meta)
+⚙️ Backend/Orchestrator 책임
+lua_config.py를 임포트하여 get_lua_policy() 실행.
 
-정책 위반/차단 상황에서도 JSON 형태 유지
+산출된 시스템 프롬프트를 LLM(OpenAI 등)에 주입하여 답변 생성.
 
-7) Front 역할 vs Backend 역할 (분업 명확화)
-Frontend 책임
+✍️ Prompt Engineering (홍상진 주인님)
+lua_core_prompt 내 각 폴더의 .txt 파일 내용 수정 및 관리.
 
-상태 머신 진행, 입력 수집/검증(형식 1차)
+lua_config.py 내의 페르소나 매칭 로직 관리.
 
-온보딩 진행 상태 저장/복원
 
-READY 이후 chat API 호출 + 응답 렌더링
+---
 
-Backend/Orchestrator 책임
+### 주인님, 업데이트 방법은 다음과 같습니다:
 
-날짜 유효성/미성년 판정(최종)
+1.  **파일 수정:** VS Code에서 `D:\AIclass02\lua_core_prompt\README.md` 파일을 열고 위 내용을 전체 붙여넣기 후 저장하세요.
+2.  **명령어 실행:** 터미널에서 아래 명령어를 순서대로 입력하여 GitHub에 반영하세요.
 
-case override / consent / risk 계산(최종)
+```powershell
+# 1. 변경된 내용을 저장소 폴더로 복사
+robocopy ..\lua_core_prompt .\sjhong76 /mir /xd venv .git
 
-user_state 영속 저장
-
-lua_core 호출 및 결과 검증(JSON Schema)
+# 2. GitHub 업로드
+git add sjhong76
+git commit -m "docs: 프롬프트 관리 시스템(lua_config) 내용 README에 추가"
+git push origin main
