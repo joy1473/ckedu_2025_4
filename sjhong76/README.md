@@ -34,7 +34,7 @@ Markdown
   "risk_label": "매우 공격형"
 }
 
----
+```
 
 ##4. Case/Policy 핵심 규칙
 Case Override: is_minor == true 시 무조건 case_id = case_05 (또는 전용 케이스) 강제.
@@ -64,13 +64,14 @@ Persona Match: case_id에 따라 lua_config.py에서 시스템 프롬프트 자�
 READY 상태 이후의 모든 채팅 요청은 아래 메타 데이터를 포함해야 합니다.
 
 📨 Request Payload
-JSON
+```JSON
 
 {
   "user_id": "sjhong76",
   "message": "현재 시장 상황 어때?",
   "user_state": { "case_id": "case_01", "is_minor": false, "risk_level": 1 }
 }
+```
 ##7. R&R (역할 분담)
 📱 Frontend 책임
 상태 머신 진행 및 UI/UX 렌더링, 입력값 1차 검증.
