@@ -33,6 +33,9 @@ Markdown
   "risk_level": 1,
   "risk_label": "매우 공격형"
 }
+
+---
+
 ##4. Case/Policy 핵심 규칙
 Case Override: is_minor == true 시 무조건 case_id = case_05 (또는 전용 케이스) 강제.
 
