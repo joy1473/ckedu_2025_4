@@ -1,25 +1,20 @@
-[최종본] 업데이트된 README.md (통 코드)
-Markdown
+# 🚀 LUA Onboarding & Task Management Contract
 
-# 🚀 LUA Onboarding & Prompt Management Contract
-
-본 문서는 **LUA 서비스**의 온보딩 상태 머신, 입력 검증 규칙, 그리고 `lua_config.py`를 통한 폴더 기반 프롬프트 관리 체계를 정의합니다.
+본 문서는 **LUA 서비스**의 온보딩 프로세스와 실전 업무(주식/뱅킹) 대응을 위한 프롬프트 관리 체계를 정의합니다.
 
 ---
 
 ## 1. 온보딩 상태 머신 (Frontend State Machine)
-
-### 🔄 상태 전이도 (States & Transitions)
-* **INTRO** → **NAME** → **BIRTHDATE** → **GENDER** → **CONSENT** → **SUITABILITY(Q1~Q4)** → **READY**
+* **Flow:** INTRO → NAME → BIRTHDATE → GENDER → CONSENT → SUITABILITY → READY
 * **특이사항:** “이전” 입력 시 1-step back 지원, 새로고침 시 세션 복원(Persistence).
 
 ---
 
 ## 2. 입력 검증 규칙 (Validation Rules)
-* **NAME:** 2~20자 실명 권장 (닉네임/테스트 계정 필터링)
+* **NAME:** 2~20자 실명 (닉네임/테스트 계정 필터링)
 * **BIRTHDATE:** `YYYYMMDD` 형식 (만 19세 기준 `is_minor` 판정)
-* **GENDER:** M/F 정규화 저장
-* **CONSENT:** 실전 투자 위험 고지 동의 여부 (`true`/`false`)
+* **GENDER:** M/F 정규화
+* **CONSENT:** 실전 투자 위험 고지 동의 (`true`/`false`)
 
 ---
 
@@ -33,59 +28,46 @@ Markdown
   "risk_level": 1,
   "risk_label": "매우 공격형"
 }
-
 ```
+## 4. Case & Policy 핵심 규칙
+Case Override: is_minor == true 시 무조건 case_id = case_05 강제.
 
-## 4. Case/Policy 핵심 규칙
-Case Override: is_minor == true 시 무조건 case_id = case_05 (또는 전용 케이스) 강제.
+Consent Rule: 투자 미동의 시 실전 거래 기능 차단 및 동의 안내 모드 진입.
 
-Consent Rule: 미동의 시 READY 진입은 가능하나 실전 거래 기능 차단.
-
-Persona Match: case_id에 따라 lua_config.py에서 시스템 프롬프트 자동 매칭.
+Intent-Based Task: 유저 메시지에서 '주식' 또는 '뱅킹' 의도 감지 시 전용 지침 결합.
 
 ## 5. 프롬프트 관리 시스템 (Prompt Management)
-주인님(기획자)이 파이썬 코드를 수정하지 않고도 AI의 말투를 바꿀 수 있도록 폴더 기반 관리 체계를 사용합니다.
+📁 폴더 구조 및 역할
+/intro: 온보딩 단계별 안내 문구
 
-📁 폴더 구조
-/intro: 환영 메시지 및 단계별 안내 (welcome.txt 등)
+/persona: 케이스별 AI 인격 정의 (MZ, 직장인, 은퇴자 등)
 
-/persona: 케이스별 AI 인격 정의 (mz_aggressive.txt, retiree_safe.txt 등)
+/suitability: 투자 성향 진단 및 결과 문구
 
-/suitability: 투자 성향 결과 문구 (result.txt)
+/consent: 동의/거부 관련 안내 문구
 
-/consent: 동의/거부 관련 안내 문구 (consent_decline.txt)
+/task (NEW): 실전 업무별 시나리오 및 체크리스트 (stock.txt, banking.txt)
 
-⚙️ 로직 로더 (lua_config.py)
-역할: 위 폴더의 .txt 파일들을 읽어 user_state에 맞는 최적의 시스템 프롬프트를 조립합니다.
+⚙️ 로더 로직 (lua_config.py)
+get_lua_policy(user_state, user_message)를 통해 유저 상태와 **의도(Intent)**에 맞는 프롬프트를 조립합니다.
 
-함수: get_lua_policy(user_state) 호출 시 {프롬프트, 추천메뉴, UI모드} 반환.
+## 6. 실전 업무 시나리오 (Task Scenarios)
+📈 주식 업무 (stock.txt)
+Slot-Filling: 종목명, 수량, 주문 방식 누락 시 재질문.
 
-## 6. lua_core 연동 계약 (Chat API)
-READY 상태 이후의 모든 채팅 요청은 아래 메타 데이터를 포함해야 합니다.
+Risk Matching: 사용자 성향(risk_level)보다 위험한 종목 주문 시 경고 필수.
 
-📨 Request Payload
-```JSON
+Final Confirm: 주문 실행 전 [종목/수량/금액] 최종 확인 절차.
 
-{
-  "user_id": "sjhong76",
-  "message": "현재 시장 상황 어때?",
-  "user_state": { "case_id": "case_01", "is_minor": false, "risk_level": 1 }
-}
-```
+💰 뱅킹 업무 (banking.txt)
+3-Way Match: 받는 사람, 계좌번호, 금액의 정확성 확인.
+
+Security: 보이스피싱 의심 상황 등에 대한 방어적 질문 포함.
+
+Limit Check: 이체 한도 및 잔액 부족 상황 대응.
+
 ## 7. R&R (역할 분담)
-📱 Frontend 책임
-상태 머신 진행 및 UI/UX 렌더링, 입력값 1차 검증.
-
-⚙️ Backend/Orchestrator 책임
-lua_config.py를 임포트하여 get_lua_policy() 실행.
-
-산출된 시스템 프롬프트를 LLM(OpenAI 등)에 주입하여 답변 생성.
-
-✍️ 홍상진 role: Prompt Engineering
-lua_core_prompt 내 각 폴더의 .txt 파일 내용 수정 및 관리.
-
-lua_config.py 내의 페르소나 매칭 로직 관리.
-
-
----
-
+역할,담당 주체,주요 책임 범위
+Frontend,개발팀,"상태 머신 구현, 입력 검증 UI, 태스크별 UI 모드 대응"
+Backend,개발팀,"lua_config.py 연동, API 엔드포인트 관리, 데이터 영속 저장"
+Prompt Eng.,홍상진 주인님,"모든 .txt 기반 시나리오 설계, 페르소나 및 태스크 지침 최적화"
