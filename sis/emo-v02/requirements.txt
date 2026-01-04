@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pymongo
+konlpy
+JPype1
+requests
+beautifulsoup4
+transformers
+torch
+jinja2

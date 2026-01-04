@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LUA - Lazy yoU AI-agent</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Legacy Theme Ported */
+            --primary-color: #333333;
+            /* Text as Primary */
+            --secondary-color: #ffffff;
+            /* Legacy BG */
+            --sidebar-bg-color: #f9f9f9;
+            /* Legacy Sidebar BG */
+            --accent-color: #10a37f;
+            /* Legacy Accent (Greenish) or keep current? User only asked for BG/Font/TextColor. Let's stick to safe defaults or keep current Accent. Legacy used #10a37f. Let's use that. */
+            --text-color: #333333;
+            /* Legacy Text */
+            --bg-color: #ffffff;
+            /* Legacy BG */
+
+            --chat-bg-user: #E1F5FE;
+            /* Legacy User Bubble (Blue-ish) */
+            --chat-bg-lua: #f0f0f0;
+            /* Legacy AI Bubble (Grey-ish) */
+            --anim-speed: 0.3s;
+            --sidebar-width: 280px;
+            --sidebar-mini-width: 80px;
+        }
+
+        /* Dark Mode Removed */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            /* Reverted to Legacy Font */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            transition: background-color var(--anim-speed);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-mini-width);
+            width: calc(100% - var(--sidebar-mini-width));
+            /* Restore width */
+            height: 60px;
+            background-color: var(--secondary-color);
+            /* Unify with Body/Main */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            transition: all var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Mobile Header adjust */
+        @media (max-width: 768px) {
+            header {
+                left: 0;
+                width: 100%;
+            }
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hamburger {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary-color);
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+        }
+
+        /* Desktop menu button inside sidebar now */
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 1px;
+            /* Hide logo in header on Desktop since it's in Sidebar? 
+               User asked for "LUA" title in Header originally.
+               Let's keep "LUA" in header for context, but maybe smaller? 
+               Or remove if redundant. Let's keep it. */
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .user-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid var(--primary-color);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .settings-icon {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        /* Dropdowns */
+        .dropdown {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: var(--bg-color);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            width: 220px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1001;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown.active {
+            display: flex;
+            animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .dropdown-title {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .dropdown-close-btn {
+            cursor: pointer;
+            color: #aaa;
+            font-size: 1rem;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+
+        .dropdown-close-btn:hover {
+            color: var(--primary-color);
+        }
+
+        /* Avatar Grid */
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 5px;
+        }
+
+        .avatar-option {
+            width: 100%;
+            padding-top: 100%;
+            /* Aspect Ratio 1:1 */
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            background-color: #fffde7;
+        }
+
+        .avatar-option:hover {
+            transform: scale(1.1);
+            border-color: var(--primary-color);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-info {
+            font-weight: bold;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .user-select-btn {
+            background: none;
+            border: 1px solid #eee;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.2s;
+        }
+
+        .user-select-btn:hover {
+            background: #f9f9f9;
+        }
+
+        /* Legacy Color Themes (Ported) */
+
+        /* White (Default) - Handled by :root */
+        body.theme-white {
+            /* Reset to defaults */
+            --primary-color: #333333;
+            --secondary-color: #ffffff;
+            --sidebar-bg-color: #f9f9f9;
+            --text-color: #333333;
+            --bg-color: #ffffff;
+            --chat-bg-user: #E1F5FE;
+        }
+
+        /* Dark (Black) */
+        body.theme-black {
+            --secondary-color: #343541;
+            /* Legacy Dark BG */
+            --bg-color: #40414f;
+            /* Legacy Input BG */
+            --sidebar-bg-color: #202123;
+            /* Legacy Sidebar BG */
+            --text-color: #ececec;
+            /* Legacy Light Text */
+            --chat-bg-user: #3E3F4B;
+            --chat-bg-lua: #343541;
+            --primary-color: #ececec;
+        }
+
+        /* Pink */
+        body.theme-pink {
+            --secondary-color: #fff0f5;
+            --bg-color: #fff0f5;
+            --sidebar-bg-color: #ffe4e1;
+            --text-color: #5d4037;
+            /* Legacy Brown Text */
+            --chat-bg-user: #ffc0cb;
+        }
+
+        /* Mint (Green) */
+        body.theme-green {
+            --secondary-color: #e0f2f1;
+            --bg-color: #e0f2f1;
+            --sidebar-bg-color: #b2dfdb;
+            --text-color: #004d40;
+            /* Legacy Dark Green Text */
+            --chat-bg-user: #b2dfdb;
+        }
+
+        /* Blue */
+        body.theme-blue {
+            --secondary-color: #e3f2fd;
+            --bg-color: #e3f2fd;
+            --sidebar-bg-color: #bbdefb;
+            --text-color: #0d47a1;
+            /* Legacy Dark Blue Text */
+            --chat-bg-user: #bbdefb;
+        }
+
+        /* Purple */
+        body.theme-purple {
+            --secondary-color: #f3e5f5;
+            --bg-color: #f3e5f5;
+            --sidebar-bg-color: #e1bee7;
+            --text-color: #4a148c;
+            /* Legacy Dark Purple Text */
+            --chat-bg-user: #e1bee7;
+        }
+
+        /* Yellow */
+        body.theme-yellow {
+            --secondary-color: #fffde7;
+            --bg-color: #fffde7;
+            --sidebar-bg-color: #fff9c4;
+            --text-color: #f57f17;
+            /* Legacy Orange Text */
+            --chat-bg-user: #fff9c4;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+
+        .theme-btn {
+            width: 100%;
+            padding-top: 100%;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-mini-width);
+            max-width: 100vw;
+            /* Default Mini */
+            height: 100vh;
+            background: var(--sidebar-bg-color);
+            /* Tone-on-tone difference */
+            border-right: 1px solid rgba(74, 59, 44, 0.08);
+            /* Subtle brown border */
+            transition: width var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1100;
+            padding: 0;
+            /* Removing padding to allow full flush alignment of toggle */
+            padding-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            /* Reduced gap */
+            box-shadow: 2px 0 10px rgba(74, 59, 44, 0.05);
+            /* Soft brown shadow */
+            overflow: hidden;
+            /* Hide text when mini */
+            white-space: nowrap;
+        }
+
+        .sidebar.expanded {
+            width: var(--sidebar-width);
+            padding: 0;
+            /* Maintain flushness */
+            padding-bottom: 20px;
+        }
+
+        /* Sidebar Toggle Btn inside Sidebar */
+        .sidebar-toggle-btn {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            width: 100%;
+            height: 60px;
+            /* Exact match with Header */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            /* Remove all margins */
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            /* Optional: visual separation like header */
+            box-sizing: border-box;
+            /* Ensure padding/border doesn't add height */
+            transition: 0.2s;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            /* Subtle hover */
+        }
+
+        /* Sidebar Header (Mobile) */
+        .sidebar-header {
+            display: none;
+            /* Hide old mobile header structure if present, rely on toggle btn */
+        }
+
+        /* Sidebar Menu Items Container */
+        .sidebar-menu {
+            padding: 10px;
+            /* Add padding for items here instead */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Sidebar Menu Items */
+        .sidebar-menu-item {
+            padding: 12px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Center content (Icon) in mini mode */
+            gap: 0;
+            /* Default gap 0 to prevent shift */
+            font-weight: 500;
+            color: var(--text-color);
+            min-width: 0;
+            /* Allow shrinking */
+            width: 100%;
+            /* Fill container */
+        }
+
+        .sidebar.expanded .sidebar-menu-item {
+            justify-content: flex-start;
+            /* Left align when expanded */
+            padding-left: 15px;
+            gap: 15px;
+            /* Restore gap when text is visible */
+        }
+
+        .sidebar-menu-item i {
+            width: 24px;
+            /* Standard icon width */
+            text-align: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu-item span {
+            opacity: 0;
+            transition: opacity 0.1s;
+            /* Faster fade out */
+            visibility: hidden;
+            white-space: nowrap;
+            overflow: hidden;
+            width: 0;
+            /* Animate width to avoid layout jumping? Or just keep absolute? 
+                         Let's keep flow but ensure it doesn't take space when hidden */
+            display: inline-block;
+        }
+
+        .sidebar.expanded .sidebar-menu-item span {
+            opacity: 1;
+            visibility: visible;
+            width: auto;
+            /* Allow natural width */
+            transition: opacity 0.3s ease-in 0.1s;
+            /* Delay fade in */
+        }
+
+        .sidebar-menu-item:hover {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        /* Main Container */
+        .main-container {
+            margin-top: 60px;
+            margin-left: var(--sidebar-mini-width);
+            width: calc(100% - var(--sidebar-mini-width));
+            /* Fix 1: Constrain width in mini mode */
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1), width var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow-x: hidden;
+            /* Fix 2: Prevent inner overflow */
+        }
+
+        /* Expanded State Push */
+        body.sidebar-expanded header {
+            left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        body.sidebar-expanded .main-container {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            /* Fix 3: Constrain width in expanded mode */
+        }
+
+        /* Mobile Styles Override */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70%;
+                /* Overlay width */
+                transform: translateX(-100%);
+                padding: 20px;
+            }
+
+            .sidebar.expanded {
+                width: 70%;
+            }
+
+            /* No mini on mobile, just open/close */
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar-menu-item span {
+                opacity: 1;
+                visibility: visible;
+                width: auto;
+                /* Restore width on mobile */
+            }
+
+            /* Always visible on mobile */
+            .sidebar-toggle-btn {
+                display: none;
+            }
+
+            /* Hide internal toggle on mobile, use header ham/close */
+
+            /* Add Mobile Close Btn logic separately if needed or reuse toggle logic */
+
+            .main-container {
+                margin-left: 0;
+            }
+
+            body.sidebar-expanded header {
+                left: 0;
+                width: 100%;
+            }
+
+            body.sidebar-expanded .main-container {
+                margin-left: 0;
+            }
+
+            header {
+                left: 0;
+                width: 100%;
+            }
+        }
+
+        /* Chat Area */
+        .chat-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 100px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .landing-message {
+            position: absolute;
+            top: 30%;
+            /* Moved up from 40% to avoid overlap with input */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+            transition: opacity 0.3s;
+        }
+
+        .landing-message h2 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            line-height: 1.6;
+            animation: slideUp 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background-color: var(--chat-bg-user);
+            border-radius: 18px 18px 2px 18px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-right: 5px;
+        }
+
+        .message.lua {
+            align-self: flex-start;
+            background-color: var(--chat-bg-lua);
+            border-radius: 18px 18px 18px 2px;
+            color: var(--text-color);
+            margin-left: 5px;
+        }
+
+        .message.lua .tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Input Area */
+        .input-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            /* Mobile Default */
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            background: var(--bg-color);
+            padding: 10px 15px;
+            border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 950;
+            border: 2px solid transparent;
+        }
+
+        /* Desktop: Center relative to content area (Viewport - Sidebar) */
+        @media (min-width: 769px) {
+            .input-container {
+                left: calc(50% + var(--sidebar-mini-width) / 2);
+            }
+
+            .landing-message {
+                left: calc(50% + var(--sidebar-mini-width) / 2) !important;
+            }
+        }
+
+        /* Adjust Input for Sidebar Push (Expanded) */
+        @media (min-width: 769px) {
+            body.sidebar-expanded .input-container {
+                left: calc(50% + var(--sidebar-width) / 2);
+            }
+
+            body.sidebar-expanded .landing-message {
+                left: calc(50% + var(--sidebar-width) / 2) !important;
+            }
+        }
+
+        .input-container.landing {
+            bottom: 50%;
+            transform: translate(-50%, 50%);
+            width: 80%;
+            padding: 15px 20px;
+        }
+
+        .mic-btn {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+
+        .mic-btn.active {
+            color: white;
+            background: #ff4b4b;
+            box-shadow: 0 0 0 0 rgba(255, 75, 75, 0.7);
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(255, 75, 75, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(255, 75, 75, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(255, 75, 75, 0);
+            }
+        }
+
+        .chat-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 1rem;
+            color: var(--text-color);
+            resize: none;
+            height: 24px;
+            max-height: 100px;
+            line-height: 24px;
+        }
+
+        .send-btn {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .send-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .send-btn.processing i {
+            animation: spin 1s infinite linear;
+        }
+
+        /* Processing Stop Icon style if needed, or just spin */
+        /* Defined in JS to change icon class */
+    </style>
+</head>
+
+<body class="theme-blue">
+
+    <div class="overlay" id="mobileOverlay"></div>
+
+    <header>
+        <div class="header-left">
+            <i class="fas fa-bars hamburger" id="mobileMenuBtn"></i>
+            <!-- Desktop Toggle removed from here -->
+            <div class="logo">LUA</div>
+        </div>
+        <div class="header-right">
+            <div class="user-icon" id="userIconBtn"
+                style="background-image: url('https://api.dicebear.com/7.x/avataaars/svg?seed=Felix');"></div>
+            <i class="fas fa-cog settings-icon" id="settingsBtn"></i>
+
+            <!-- User Dropdown (With Avatar Grid) -->
+            <div class="dropdown" id="userDropdown">
+                <div class="dropdown-header">
+                    <span class="dropdown-title">Choose Avatar</span>
+                    <i class="fas fa-times dropdown-close-btn" onclick="closeDropdowns()"></i>
+                </div>
+
+                <div class="avatar-grid">
+                    <!-- Egg Themed Avatars (Fun Emoji + Yellow BG) -->
+                    <div class="avatar-option" onclick="changeUser('Egg1')"
+                        style="background-image: url('https://api.dicebear.com/7.x/fun-emoji/svg?seed=Egg1&backgroundColor=ffe082')">
+                    </div>
+                    <div class="avatar-option" onclick="changeUser('EggHappy')"
+                        style="background-image: url('https://api.dicebear.com/7.x/fun-emoji/svg?seed=EggHappy&backgroundColor=ffe082')">
+                    </div>
+                    <div class="avatar-option" onclick="changeUser('EggSleepy')"
+                        style="background-image: url('https://api.dicebear.com/7.x/fun-emoji/svg?seed=EggSleepy&backgroundColor=ffe082')">
+                    </div>
+                    <div class="avatar-option" onclick="changeUser('EggDizzy')"
+                        style="background-image: url('https://api.dicebear.com/7.x/fun-emoji/svg?seed=EggDizzy&backgroundColor=ffe082')">
+                    </div>
+                    <div class="avatar-option" onclick="changeUser('EggCool')"
+                        style="background-image: url('https://api.dicebear.com/7.x/fun-emoji/svg?seed=EggCool&backgroundColor=ffe082')">
+                    </div>
+
+                    <div class="avatar-option" onclick="changeUser('EggCute')"
+                        style="background-image: url('https://api.dicebear.com/7.x/fun-emoji/svg?seed=EggCute&backgroundColor=ffe082')">
+                    </div>
+                    <div class="avatar-option" onclick="changeUser('EggShock')"
+                        style="background-image: url('https://api.dicebear.com/7.x/fun-emoji/svg?seed=EggShock&backgroundColor=ffe082')">
+                    </div>
+                    <div class="avatar-option" onclick="changeUser('EggLove')"
+                        style="background-image: url('https://api.dicebear.com/7.x/fun-emoji/svg?seed=EggLove&backgroundColor=ffe082')">
+                    </div>
+                    <div class="avatar-option" onclick="changeUser('EggWink')"
+                        style="background-image: url('https://api.dicebear.com/7.x/fun-emoji/svg?seed=EggWink&backgroundColor=ffe082')">
+                    </div>
+                    <div class="avatar-option" onclick="changeUser('EggCry')"
+                        style="background-image: url('https://api.dicebear.com/7.x/fun-emoji/svg?seed=EggCry&backgroundColor=ffe082')">
+                    </div>
+                </div>
+
+                <div class="user-select-btn" onclick="changeUser('Felix')">User 1 (Felix)</div>
+                <div class="user-select-btn" onclick="changeUser('Aneka')">User 2 (Aneka)</div>
+                <div class="user-select-btn" onclick="changeUser('Zack')">User 3 (Zack)</div>
+            </div>
+
+            <!-- Settings Dropdown -->
+            <div class="dropdown" id="settingsDropdown">
+                <div class="dropdown-header">
+                    <span class="dropdown-title">Settings</span>
+                    <i class="fas fa-times dropdown-close-btn" onclick="closeDropdowns()"></i>
+                </div>
+                <!-- Removed Dark Mode Toggle -->
+                <div style="font-size:0.9rem; font-weight:bold; margin-bottom:5px;">Theme Settings</div>
+                <div class="theme-grid">
+                    <div class="theme-btn" style="background:#ffffff; border:1px solid #eee;"
+                        onclick="setTheme('theme-white')"></div>
+                    <div class="theme-btn" style="background:#343541; border:1px solid #333;"
+                        onclick="setTheme('theme-black')"></div>
+                    <div class="theme-btn" style="background:#ffc0cb" onclick="setTheme('theme-pink')"></div>
+                    <div class="theme-btn" style="background:#b2dfdb" onclick="setTheme('theme-green')"></div>
+                    <div class="theme-btn" style="background:#2196f3" onclick="setTheme('theme-blue')"></div>
+                    <div class="theme-btn" style="background:#9c27b0" onclick="setTheme('theme-purple')"></div>
+                    <div class="theme-btn" style="background:#ffeb3b" onclick="setTheme('theme-yellow')"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <!-- Desktop Toggle Inside Sidebar -->
+        <div class="sidebar-toggle-btn" id="desktopToggleBtn"><i class="fas fa-bars"></i></div>
+
+        <!-- Close Btn for Mobile (Hidden on Desktop via CSS ideally) -->
+        <!-- Sidebar Toggle Btn inside Sidebar (Flush Top) -->
+        <button class="sidebar-toggle-btn" id="sidebarToggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="sidebar-menu">
+            <a href="#" class="sidebar-menu-item active" onclick="startNewChat()">
+                <i class="fas fa-comment-medical"></i> <!-- New Chat Icon -->
+                <span>New Chat</span>
+            </a>
+
+            <a href="#" class="sidebar-menu-item" onclick="toggleHistory(event)">
+                <i class="fas fa-history"></i>
+                <span>History</span>
+            </a>
+
+            <a href="#" class="sidebar-menu-item">
+                <i class="fas fa-wallet"></i>
+                <span>Wallet</span>
+            </a>
+
+            <a href="#" class="sidebar-menu-item">
+                <i class="fas fa-user-shield"></i>
+                <span>Profile</span>
+            </a>
+        </div>div>
+
+        <div class="main-container" id="mainContainer">
+            <div class="landing-message" id="landingMessage">
+                <h2>User님, 안녕하세요!<br>무엇을 도와드릴까요?</h2>
+            </div>
+
+            <div class="chat-list" id="chatList">
+                <!-- Messages will be added here -->
+            </div>
+        </div>
+
+        <div class="input-container landing" id="inputContainer">
+            <div class="mic-btn" id="micBtn"><i class="fas fa-microphone"></i></div>
+            <textarea class="chat-input" id="chatInput" placeholder="금융 고민을 말씀해주세요..." rows="1"></textarea>
+            <div class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></div>
+        </div>
+
+        <script>
+            // DOM Elements
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            // const desktopMenuBtn = ... removed
+            const desktopToggleBtn = document.getElementById('desktopToggleBtn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+            const mobileSidebarHeader = document.getElementById('mobileSidebarHeader');
+
+            // ... (other element consts) ...
+            const userIconBtn = document.getElementById('userIconBtn');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const userDropdown = document.getElementById('userDropdown');
+            const settingsDropdown = document.getElementById('settingsDropdown');
+            const inputContainer = document.getElementById('inputContainer');
+            const landingMessage = document.getElementById('landingMessage');
+            const chatInput = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const micBtn = document.getElementById('micBtn');
+            const chatList = document.getElementById('chatList');
+            const body = document.body;
+
+            let isLanding = true;
+            let isProcessing = false;
+
+            // --- Layout Interactions ---
+            function toggleMobileSidebar() {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+                // Ensure mobile header is shown when open
+                if (sidebar.classList.contains('mobile-open')) {
+                    mobileSidebarHeader.style.display = 'flex';
+                } else {
+                    setTimeout(() => { if (!sidebar.classList.contains('mobile-open')) mobileSidebarHeader.style.display = 'none'; }, 300);
+                }
+            }
+
+            function toggleDesktopSidebar() {
+                sidebar.classList.toggle('expanded');
+                body.classList.toggle('sidebar-expanded');
+            }
+
+            mobileMenuBtn.addEventListener('click', toggleMobileSidebar);
+            // desktopMenuBtn removed
+            overlay.addEventListener('click', toggleMobileSidebar);
+            closeSidebarBtn.addEventListener('click', toggleMobileSidebar);
+
+            if (desktopToggleBtn) {
+                desktopToggleBtn.addEventListener('click', toggleDesktopSidebar);
+            }
+
+            // Reset/Check on resize (optional but good practice)
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    // If switching to desktop, clean up mobile classes
+                    sidebar.classList.remove('mobile-open');
+                    overlay.classList.remove('active');
+                    mobileSidebarHeader.style.display = 'none';
+                }
+            });
+
+            // --- Dropdowns ---
+            function closeDropdowns(except) {
+                if (except !== userDropdown) userDropdown.classList.remove('active');
+                if (except !== settingsDropdown) settingsDropdown.classList.remove('active');
+            }
+
+            userIconBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isActive = userDropdown.classList.contains('active');
+                closeDropdowns();
+                if (!isActive) userDropdown.classList.add('active');
+            });
+
+            settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isActive = settingsDropdown.classList.contains('active');
+                closeDropdowns();
+                if (!isActive) settingsDropdown.classList.add('active');
+            });
+
+            document.addEventListener('click', () => closeDropdowns());
+            document.querySelector('.dropdown')?.addEventListener('click', e => e.stopPropagation());
+
+            // --- Theme & User ---
+            function changeUser(seed) {
+                let cx = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + seed;
+                if (seed.startsWith('Egg')) {
+                    // New Egg Theme Avatars
+                    cx = `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${seed}&backgroundColor=ffe082`;
+                }
+                userIconBtn.style.backgroundImage = `url('${cx}')`;
+                closeDropdowns();
+            }
+
+            function setTheme(themeClass) {
+                body.className = ''; // reset
+                body.classList.add(themeClass);
+                // if (localStorage.getItem('darkMode') === 'true') body.classList.add('dark-mode'); // Removed logic
+            }
+
+            /* Dark Mode Toggle Removed per user request
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                 body.classList.toggle('dark-mode');
+                 localStorage.setItem('darkMode', body.classList.contains('dark-mode'));
+            }); 
+            */
+
+            // --- Input & Chat Interaction ---
+            chatInput.addEventListener('focus', () => {
+                if (isLanding) {
+                    isLanding = false;
+                    landingMessage.style.opacity = '0';
+                    setTimeout(() => landingMessage.style.display = 'none', 300);
+                    inputContainer.classList.remove('landing');
+                }
+            });
+
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            sendBtn.addEventListener('click', () => {
+                if (isProcessing) {
+                    // Stop processing logic here (simulation)
+                    isProcessing = false;
+                    updateSendBtnState();
+                    return;
+                }
+                sendMessage();
+            });
+
+            function updateSendBtnState() {
+                if (isProcessing) {
+                    sendBtn.innerHTML = '<i class="fas fa-stop"></i>'; // Stop icon
+                    sendBtn.classList.add('processing');
+                } else {
+                    sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                    sendBtn.classList.remove('processing');
+                }
+            }
+
+            async function sendMessage() {
+                const text = chatInput.value.trim();
+                if (!text) return;
+
+                // 1. Move UI if needed
+                if (isLanding) {
+                    isLanding = false;
+                    landingMessage.style.opacity = '0';
+                    setTimeout(() => landingMessage.style.display = 'none', 300);
+                    inputContainer.classList.remove('landing');
+                }
+
+                // 2. Add User Message
+                addMessage(text, 'user');
+                chatInput.value = '';
+
+                // 3. Set Processing State
+                isProcessing = true;
+                updateSendBtnState();
+
+                // 4. API Call
+                try {
+                    const response = await fetch(`/agent/consult?term=${encodeURIComponent(text)}`);
+                    const data = await response.json();
+
+                    // 5. Add Bot Message
+                    if (data.status === 'success') {
+                        const content = `
+                        <span class="tag">[${data.analysis.final_scenario}] ${data.emotion_interpretation}</span>
+                        ${data.professional_response}
+                    `;
+                        addMessage(content, 'lua');
+                    } else {
+                        addMessage("죄송합니다. 오류가 발생했습니다.", 'lua');
+                    }
+
+                } catch (e) {
+                    addMessage("서버 연결에 실패했습니다.", 'lua');
+                } finally {
+                    isProcessing = false;
+                    updateSendBtnState();
+                }
+            }
+
+            function addMessage(htmlContent, type) {
+                const msgDiv = document.createElement('div');
+                msgDiv.classList.add('message', type);
+                // Allow HTML for bot, Text for user (sanitization recommended in production)
+                if (type === 'user') msgDiv.textContent = htmlContent;
+                else msgDiv.innerHTML = htmlContent;
+
+                chatList.appendChild(msgDiv);
+
+                // Scroll to bottom
+                const mainContainer = document.getElementById('mainContainer');
+                mainContainer.scrollTop = mainContainer.scrollHeight;
+            }
+
+            // --- Voice UI ---
+            let isListening = false;
+            micBtn.addEventListener('click', () => {
+                if (!isListening) {
+                    // Start listening simulation (Permission popup would be browser native)
+                    if (confirm("마이크 권한을 허용하시겠습니까?")) {
+                        isListening = true;
+                        micBtn.classList.add('active');
+                        chatInput.placeholder = "말씀해주세요...";
+                        // Simulate voice input after 3 seconds
+                        setTimeout(() => {
+                            if (isListening) {
+                                chatInput.value = "요즘 주식이 너무 파란데 어떻게 해야 할지 모르겠어...";
+                                stopListening();
+                                sendMessage();
+                            }
+                        }, 3000);
+                    }
+                } else {
+                    stopListening();
+                }
+            });
+
+            function stopListening() {
+                isListening = false;
+                micBtn.classList.remove('active');
+                chatInput.placeholder = "금융 고민을 말씀해주세요...";
+            }
+
+        </script>
+</body>
+
+</html>
