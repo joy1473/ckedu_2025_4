@@ -97,8 +97,8 @@ class KiwoomAPI():
     response.raise_for_status()
     logger.debug(f"status_code : {response.status_code}")
     if response.status_code == 200:
-      token_data = response.json()
-      print(token_data)
+      token_data = json.loads(response.text)
+      logger.debug("token_data :", token_data)
       if token_data and token_data['token']:
         self.token_data = token_data
       else:
