@@ -778,7 +778,6 @@ class KoreaInvestmentAPI():
       ※ 중요 : 해당 API는 제공 정보량이 많아 조회속도가 느린 API입니다. 단순 주문 준비를 위해서는 주식매수/매도가능수량 조회 TR 사용을 권장 드립니다.
     
     Args:
-      in_content_type (str(40)): 컨텐츠타입. application/json; charset=utf-8
       in_tr_id (str(13)): 거래ID(필수). [실전투자] TTTC8434R : 주식 잔고 조회  [모의투자] VTTC8434R : 주식 잔고 조회
       in_tr_cont (str(1)): 연속 거래 여부. 공백 : 초기 조회 N : 다음 데이터 조회 (output header의 tr_cont가 M일 경우)
       in_custtype (str(1)): 고객타입. B : 법인 P : 개인
@@ -993,7 +992,6 @@ class KoreaInvestmentAPI():
        . 미수 사용 O: ORD_DVSN:01(시장가) or 특정 주문구분(ex.IOC)로 지정하여 max_buy_qty(최대매수수량) 확인
     
     Args:
-      in_content_type (str(40)): 컨텐츠타입. application/json; charset=utf-8
       in_tr_id (str(13)): 거래ID(필수). [실전투자] TTTC8908R : 매수 가능 조회  [모의투자] VTTC8908R : 매수 가능 조회
       in_tr_cont (str(1)): 연속 거래 여부. tr_cont를 이용한 다음조회 불가 API
       in_custtype (str(1)): 고객타입. B : 법인 P : 개인
@@ -1355,7 +1353,6 @@ class KoreaInvestmentAPI():
           일반주문으로 이미 전환된 주문에는 영향을 미치지 않습니다. 반드시 장 시작전 주문처리결과를 확인하시기 바랍니다.
     
     Args:
-      in_content_type (str(40)): 컨텐츠타입. application/json; charset=utf-8
       in_tr_id (str(13)): 거래ID(필수). [실전투자] CTSC0008U : 국내예약매수입력/주문예약매도입력
       in_tr_cont (str(1)): 연속 거래 여부. tr_cont를 이용한 다음조회 불가 API
       in_custtype (str(1)): 고객타입. B : 법인  P : 개인
@@ -1450,7 +1447,6 @@ class KoreaInvestmentAPI():
          (EX. "CANO" : "12345678", "ACNT_PRDT_CD": "01",...)
     
     Args:
-      in_content_type (str(40)): 컨텐츠타입. application/json; charset=utf-8
       in_tr_id (str(13)): 거래ID(필수). [실전투자] CTSC0009U : 국내주식예약취소주문 CTSC0013U : 국내주식예약정정주문 * 모의투자 사용 불가
       in_tr_cont (str(1)): 연속 거래 여부. tr_cont를 이용한 다음조회 불가 API
       in_custtype (str(1)): 고객타입. B : 법인  P : 개인
@@ -1548,7 +1544,6 @@ class KoreaInvestmentAPI():
       실전계좌/모의계좌의 경우, 한 번의 호출에 최대 20건까지 확인 가능하며, 이후의 값은 연속조회를 통해 확인하실 수 있습니다.
     
     Args:
-      in_content_type (str(40)): 컨텐츠타입. application/json; charset=utf-8
       in_tr_id (str(13)): 거래ID(필수). [실전투자] CTSC0004R : 국내주식예약주문조회 * 모의투자 사용 불가
       in_tr_cont (str(1)): 연속 거래 여부. 공백 : 초기 조회 N : 다음 데이터 조회 (output header의 tr_cont가 M일 경우)
       in_custtype (str(1)): 고객타입. B : 법인  P : 개인
