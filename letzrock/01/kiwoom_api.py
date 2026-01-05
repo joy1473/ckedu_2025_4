@@ -59,7 +59,8 @@ class KiwoomAPI():
     if response.status_code == 200:
       #logger.debug("response headers :", json.dumps(response.headers()))
       #logger.debug("response text :", response.text)
-      response_data = json.loads(response.text)
+      #response_data = json.loads(response.text)
+      response_data = response.json()
       logger.debug("response data :", response_data)
       response_headers = {}
       for x in response.headers.keys():
@@ -97,7 +98,7 @@ class KiwoomAPI():
     response.raise_for_status()
     logger.debug(f"status_code : {response.status_code}")
     if response.status_code == 200:
-      token_data = json.loads(response.text)
+      token_data = response.json()
       logger.debug("token_data :", token_data)
       if token_data and token_data['token']:
         self.token_data = token_data

@@ -61,7 +61,8 @@ class KoreaInvestmentAPI():
     if response.status_code == 200:
       #logger.debug("response headers :", json.dumps(response.headers()))
       #logger.debug("response text :", response.text)
-      response_data = json.loads(response.text)
+      #response_data = json.loads(response.text)
+      response_data = response.json()
       logger.debug("response data :", response_data)
       response_headers = {}
       for x in response.headers.keys():
@@ -104,8 +105,11 @@ class KoreaInvestmentAPI():
     response.raise_for_status()
     logger.debug(f"status_code : {response.status_code}")
     if response.status_code == 200:
-      token_data = json.loads(response.text)
-      logger.debug("token_data :", token_data)
+      try:
+        token_data = response.json()
+        print("token_data :", token_data)
+      except Exception as e:
+        print(e)
       if token_data and token_data['access_token']:
         self.token_data = token_data
       else:
