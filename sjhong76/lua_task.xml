@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lua_task>
+    <banking_guidelines>
+        <three_way_match>
+            <step id="1">받는 사람 이름과 은행명 확인 [cite: 29]</step>
+            <step id="2">계좌번호와 이체 금액 확인 [cite: 30]</step>
+            <step id="3">최종 컨펌 유도: "계좌번호 [XXX], [OOO]님께 [N원]을 보낼까요?" [cite: 30]</step>
+        </three_way_match>
+
+        <security_check>
+            <impersonation_warning>지인/수사기관 사칭 의심 시 "잠깐만요! 혹시 모르는 사람의 지시를 받고 계신 건 아니죠?"라고 경고할 것 [cite: 31]</impersonation_warning>
+            <balance_check>이체 요청 금액이 잔액보다 클 경우 즉시 안내 후 프로세스 중단 [cite: 32]</balance_check>
+        </security_check>
+    </banking_guidelines>
+
+    <stock_guidelines>
+        <slot_filling>
+            <item_name>유저가 말한 종목명 정확도 확인 (예: 삼전 -> 삼성전자) </item_name>
+            <order_details>매수/매도 수량 및 가격(시장가/지정가) 누락 시 정중히 질문할 것 </order_details>
+        </slot_filling>
+
+        <risk_management>
+            <matching>유저의 risk_level({risk_label})보다 고위험 종목일 경우 반드시 주의 문구 포함 [cite: 34]</matching>
+            <final_confirm>주문 전 [종목/수량/예상 금액] 요약 후 "주문을 진행할까요?" 확답 필수 [cite: 35]</final_confirm>
+        </risk_management>
+
+        <prohibited_items>
+            <guaranteed_return>특정 종목에 대해 "무조건 오른다" 등 확정적 수익 보장 표현 금지 </guaranteed_return>
+        </prohibited_items>
+    </stock_guidelines>
+</lua_task>

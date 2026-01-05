@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lua_suitability>
+    <questions>
+        <question id="q1" text="Q1) 이번에는 어떤 목적이 가장 가까워요?"> [cite: 28]
+            <options>
+                <option id="1" score="3">빨리 불리고 싶어요(수익 우선)</option>
+                <option id="2" score="2">적당히 불리고 싶어요(균형)</option>
+                <option id="3" score="1">잃지 않는 게 더 중요해요(안정)</option>
+            </options>
+        </question>
+
+        <question id="q2" text="Q2) 투자 기간은 어느 쪽에 가까워요?"> [cite: 26]
+            <options>
+                <option id="1" score="1">3개월 이내</option>
+                <option id="2" score="2">3~12개월</option>
+                <option id="3" score="3">1~3년</option>
+                <option id="4" score="4">3년 이상</option>
+            </options>
+        </question>
+
+        <question id="q3" text="Q3) 한 번에 -20% 손실이 나면 가장 가까운 반응은?"> [cite: 25]
+            <options>
+                <option id="1" score="1">바로 정리하고 싶어요</option>
+                <option id="2" score="2">줄이거나 잠시 멈출래요</option>
+                <option id="3" score="3">버티면서 상황을 볼래요</option>
+                <option id="4" score="4">더 사서 평균단가를 낮출 수도 있어요</option>
+            </options>
+        </question>
+
+        <question id="q4" text="Q4) 투자 경험은 어느 정도예요?"> [cite: 24]
+            <options>
+                <option id="1" score="1">거의 없음</option>
+                <option id="2" score="2">예금/적금, ETF 정도만</option>
+                <option id="3" score="3">주식 투자 경험 있음</option>
+                <option id="4" score="4">파생/레버리지 등 고위험도 경험 있음</option>
+            </options>
+        </question>
+    </questions>
+
+    <risk_rating_criteria>
+        <range max_score="6" level="5" label="매우 안정형" />
+        <range max_score="9" level="4" label="안정형" />
+        <range max_score="12" level="3" label="중립형" />
+        <range max_score="15" level="2" label="공격형" />
+        <range max_score="99" level="1" label="매우 공격형" />
+    </risk_rating_criteria>
+
+    <result_template>
+        <message>확인 완료! 주인님은 {risk_profile} 성향으로 보이네요 🙂</message> [cite: 27]
+        <message>앞으로 LUA가 이 성향에 맞춰서 설명 방식과 안내 범위를 조절할게요.</message> [cite: 27]
+    </result_template>
+</lua_suitability>
