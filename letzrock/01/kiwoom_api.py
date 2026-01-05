@@ -1,5 +1,6 @@
 import requests
 import json
+from datetime import datetime
 import os
 import logging
 from api_utils import format_datetime
@@ -16,6 +17,8 @@ logger.addHandler(stream_handler)
 log_file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), f'logs/kiwoom_api_{format_datetime('%Y%m%d')}.log'))
 file_handler = logging.FileHandler(filename=log_file_name)
 logger.addHandler(file_handler)
+
+user_token_data = {}
 
 class KiwoomAPI():
   """
@@ -42,6 +45,24 @@ class KiwoomAPI():
       self.base_url = "https://mockapi.kiwoom.com"
     # 토큰 정보
     self.token_data = None
+    self.json_file_name = f'kiwoom_token_{format_datetime('%Y%m%d')}.json'
+    if os.path.exists(self.json_file_name):
+      with open(self.json_file_name, 'r', encoding='utf-8') as f:
+        txt = f.read()
+        f.close()
+        print(txt.strip())
+        if txt and txt.strip().startswith('{'):
+          user_token_data = json.loads(txt)
+          if self.app_key in user_token_data:
+            expires_dt = user_token_data[self.app_key]['expires_dt']
+            format = '%Y%m%d%H%M%S'
+            current_time = datetime.now()
+            end_time = datetime.strptime(expires_dt, format)
+            time_difference = end_time - current_time
+            print(f'expires_dt : {time_difference.total_seconds()} seconds after...')
+            if time_difference.total_seconds() > 0:
+              self.token_data = user_token_data[self.app_key]
+              print(self.token_data)
   
   def _send_request(self, url: str, params: dict, headers: dict):
     """
@@ -61,11 +82,12 @@ class KiwoomAPI():
       #logger.debug("response text :", response.text)
       #response_data = json.loads(response.text)
       response_data = response.json()
-      logger.debug("response data :", response_data)
+      logger.debug("response data :", response.text)
+      logger.debug("response data keys :", response_data.keys())
       response_headers = {}
       for x in response.headers.keys():
         if x.islower():
-            response_headers[x] = response.headers.get(x)
+          response_headers[x] = response.headers.get(x)
       logger.debug("response headers :", response_headers)
       return response_headers, response_data
     else:
@@ -80,34 +102,39 @@ class KiwoomAPI():
       RuntimeError: 토큰을 발급받지 못한 경우
     """
     
-    headers = {
-      "Content-Type": "application/json"
-    }
-    params = {
-      "grant_type": "client_credentials",
-      "appkey": self.app_key,
-      "secretkey": self.app_secret,
-    }
-    url = '/oauth2/token'
-    
-    full_url = f"{self.base_url}{url}"
-    logger.debug(headers)
-    logger.debug(params)
-    logger.debug(full_url)
-    response = requests.post(full_url, data=json.dumps(params), headers=headers)
-    response.raise_for_status()
-    logger.debug(f"status_code : {response.status_code}")
-    if response.status_code == 200:
-      token_data = response.json()
-      logger.debug("token_data :", token_data)
-      if token_data and token_data['token']:
-        self.token_data = token_data
+    if not self.token_data:
+      headers = {
+        "Content-Type": "application/json"
+      }
+      params = {
+        "grant_type": "client_credentials",
+        "appkey": self.app_key,
+        "secretkey": self.app_secret,
+      }
+      url = '/oauth2/token'
+      
+      full_url = f"{self.base_url}{url}"
+      logger.debug(headers)
+      logger.debug(params)
+      logger.debug(full_url)
+      response = requests.post(full_url, data=json.dumps(params), headers=headers)
+      response.raise_for_status()
+      logger.debug(f"status_code : {response.status_code}")
+      if response.status_code == 200:
+        token_data = response.json()
+        logger.debug("token_data :", token_data)
+        if token_data and token_data['token']:
+          self.token_data = token_data
+          user_token_data[self.app_key] = token_data
+          with open(self.json_file_name, 'w', encoding='utf-8') as f:
+            f.write(json.dumps(user_token_data, indent=4))
+            f.close()
+        else:
+          self.token_data = None
+          raise RuntimeError("Not connected: token is not available.")
       else:
         self.token_data = None
         raise RuntimeError("Not connected: token is not available.")
-    else:
-      self.token_data = None
-      raise RuntimeError("Not connected: token is not available.")
   
   def close(self):
     """

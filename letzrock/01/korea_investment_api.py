@@ -1,5 +1,6 @@
 import requests
 import json
+from datetime import datetime
 import os
 import logging
 from api_utils import format_datetime
@@ -16,6 +17,8 @@ logger.addHandler(stream_handler)
 log_file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), f'logs/korea_investment_api_{format_datetime('%Y%m%d')}.log'))
 file_handler = logging.FileHandler(filename=log_file_name)
 logger.addHandler(file_handler)
+
+user_token_data = {}
 
 class KoreaInvestmentAPI():
   """
@@ -42,12 +45,35 @@ class KoreaInvestmentAPI():
       self.base_url = "https://openapivts.koreainvestment.com:29443"
     # 토큰 정보
     self.token_data = None
+    self.json_file_name = f'korea_investment_token_{format_datetime('%Y%m%d')}.json'
+    if os.path.exists(self.json_file_name):
+      with open(self.json_file_name, 'r', encoding='utf-8') as f:
+        txt = f.read()
+        f.close()
+        print(txt.strip())
+        if txt and txt.strip().startswith('{'):
+          user_token_data = json.loads(txt)
+          if self.app_key in user_token_data:
+            expires_dt = user_token_data[self.app_key]['access_token_token_expired'].replace('-', '').replace(':', '').replace(' ', '')
+            format = '%Y%m%d%H%M%S'
+            current_time = datetime.now()
+            end_time = datetime.strptime(expires_dt, format)
+            time_difference = end_time - current_time
+            print(f'expires_dt : {time_difference.total_seconds()} seconds after...')
+            if time_difference.total_seconds() > 0:
+              self.token_data = user_token_data[self.app_key]
+              print(self.token_data)
   
   def _send_request(self, url: str, method: str, params: dict, headers: dict):
     """
     내부 공통 요청 처리 함수
     """
     logger.debug(f'method = {method}')
+    # headers["Content-Type"] = "application/json"
+    # headers["Accept"] = "text/plain"
+    # headers["charset"] = "UTF-8"
+    if headers and 'api-id' in headers:
+      del headers['api-id']
     full_url = f"{self.base_url}{url}"
     logger.debug(headers)
     logger.debug(params)
@@ -60,6 +86,7 @@ class KoreaInvestmentAPI():
       #   query_string = "&".join([f"{k}={v}" for k, v in params.items()])
       #   logger.debug(query_string)
       #   full_url += "?" + query_string
+      # response = requests.get(full_url, headers=headers)
       logger.debug(full_url)
       response = requests.get(full_url, params=params, headers=headers)
     response.raise_for_status()
@@ -69,11 +96,12 @@ class KoreaInvestmentAPI():
       #logger.debug("response text :", response.text)
       #response_data = json.loads(response.text)
       response_data = response.json()
-      logger.debug("response data :", response_data)
+      logger.debug("response data :", response.text)
+      logger.debug("response data keys :", response_data.keys())
       response_headers = {}
       for x in response.headers.keys():
         if x.islower():
-            response_headers[x] = response.headers.get(x)
+          response_headers[x] = response.headers.get(x)
       logger.debug("response headers :", response_headers)
       return response_headers, response_data
     else:
@@ -94,36 +122,41 @@ class KoreaInvestmentAPI():
       RuntimeError: 토큰을 발급받지 못한 경우
     """
     
-    headers = {
-      "Content-Type": "application/json"
-    }
-    params = {
-      "grant_type": "client_credentials",
-      "appkey": self.app_key,
-      "appsecret": self.app_secret,
-    }
-    url = '/oauth2/tokenP'
-    full_url = f"{self.base_url}{url}"
-    logger.debug(headers)
-    logger.debug(params)
-    logger.debug(full_url)
-    response = requests.post(full_url, data=json.dumps(params), headers=headers)
-    response.raise_for_status()
-    logger.debug(f"status_code : {response.status_code}")
-    if response.status_code == 200:
-      try:
-        token_data = response.json()
-        print("token_data :", token_data)
-      except Exception as e:
-        print(e)
-      if token_data and token_data['access_token']:
-        self.token_data = token_data
+    if not self.token_data:
+      headers = {
+        "Content-Type": "application/json"
+      }
+      params = {
+        "grant_type": "client_credentials",
+        "appkey": self.app_key,
+        "appsecret": self.app_secret,
+      }
+      url = '/oauth2/tokenP'
+      full_url = f"{self.base_url}{url}"
+      logger.debug(headers)
+      logger.debug(params)
+      logger.debug(full_url)
+      response = requests.post(full_url, data=json.dumps(params), headers=headers)
+      response.raise_for_status()
+      logger.debug(f"status_code : {response.status_code}")
+      if response.status_code == 200:
+        try:
+          token_data = response.json()
+          print("token_data :", token_data)
+        except Exception as e:
+          print(e)
+        if token_data and token_data['access_token']:
+          self.token_data = token_data
+          user_token_data[self.app_key] = token_data
+          with open(self.json_file_name, 'w', encoding='utf-8') as f:
+            f.write(json.dumps(user_token_data, indent=4))
+            f.close()
+        else:
+          self.token_data = None
+          raise RuntimeError("Not connected: token is not available.")
       else:
         self.token_data = None
         raise RuntimeError("Not connected: token is not available.")
-    else:
-      self.token_data = None
-      raise RuntimeError("Not connected: token is not available.")
   
   def close(self):
     """
@@ -171,10 +204,10 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output (str): 응답상세. single
-      out_KRX_FWDG_ORD_ORGNO (str(5)): 거래소코드
-      out_ODNO (str(10)): 주문번호
-      out_ORD_TMD (str(6)): 주문시간
+      out_output (list): 응답상세. single
+        - KRX_FWDG_ORD_ORGNO (str(5)): 거래소코드
+        - ODNO (str(10)): 주문번호
+        - ORD_TMD (str(6)): 주문시간
     
     Raises:
       Exception: 에러
@@ -197,7 +230,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-001',
     }
     params = {
       'CANO': in_CANO,
@@ -214,7 +246,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'POST', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -223,9 +255,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_KRX_FWDG_ORD_ORGNO'] = out_data['KRX_FWDG_ORD_ORGNO']
-    return_data['out_ODNO'] = out_data['ODNO']
-    return_data['out_ORD_TMD'] = out_data['ORD_TMD']
     
     return return_data
 
@@ -280,9 +309,9 @@ class KoreaInvestmentAPI():
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
       out_output (str): 응답상세. single
-      out_krx_fwdg_ord_orgno (str(5)): 한국거래소전송주문조직번호
-      out_odno (str(10)): 주문번호
-      out_ord_tmd (str(6)): 주문시간
+        - krx_fwdg_ord_orgno (str(5)): 한국거래소전송주문조직번호
+        - odno (str(10)): 주문번호
+        - ord_tmd (str(6)): 주문시간
     
     Raises:
       Exception: 에러
@@ -305,7 +334,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-002',
     }
     params = {
       'CANO': in_CANO,
@@ -337,7 +365,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'POST', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -346,9 +374,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_krx_fwdg_ord_orgno'] = out_data['krx_fwdg_ord_orgno']
-    return_data['out_odno'] = out_data['odno']
-    return_data['out_ord_tmd'] = out_data['ord_tmd']
     
     return return_data
 
@@ -390,10 +415,10 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output (str): 응답상세. single
-      out_krx_fwdg_ord_orgno (str(5)): 한국거래소전송주문조직번호
-      out_odno (str(10)): 주문번호
-      out_ord_tmd (str(6)): 주문시각
+      out_output (list): 응답상세. single
+        - krx_fwdg_ord_orgno (str(5)): 한국거래소전송주문조직번호
+        - odno (str(10)): 주문번호
+        - ord_tmd (str(6)): 주문시각
     
     Raises:
       Exception: 에러
@@ -416,7 +441,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-003',
     }
     params = {
       'CANO': in_CANO,
@@ -435,7 +459,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'POST', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -444,9 +468,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_krx_fwdg_ord_orgno'] = out_data['krx_fwdg_ord_orgno']
-    return_data['out_odno'] = out_data['odno']
-    return_data['out_ord_tmd'] = out_data['ord_tmd']
     
     return return_data
 
@@ -483,28 +504,28 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output (str): 응답상세. array
-      out_ord_gno_brno (str(5)): 주문채번지점번호. 주문시 한국투자증권 시스템에서 지정된 영업점코드
-      out_odno (str(10)): 주문번호. 주문시 한국투자증권 시스템에서 채번된 주문번호
-      out_orgn_odno (str(6)): 원주문번호. 정정/취소주문 인경우 원주문번호
-      out_ord_dvsn_name (str(5)): 주문구분명
-      out_pdno (str(10)): 상품번호. 종목번호(뒤 6자리만 해당)
-      out_prdt_name (str(6)): 상품명. 종목명
-      out_rvse_cncl_dvsn_name (str(5)): 정정취소구분명. 정정 또는 취소 여부 표시
-      out_ord_qty (str(10)): 주문수량
-      out_ord_unpr (str(6)): 주문단가. 1주당 주문가격
-      out_ord_tmd (str(5)): 주문시각. 주문시각(시분초HHMMSS)
-      out_tot_ccld_qty (str(10)): 총체결수량. 주문 수량 중 체결된 수량
-      out_tot_ccld_amt (str(6)): 총체결금액. 주문금액 중 체결금액
-      out_psbl_qty (str(5)): 가능수량. 정정/취소 주문 가능 수량
-      out_sll_buy_dvsn_cd (str(10)): 매도매수구분코드. 01 : 매도 / 02 : 매수
-      out_ord_dvsn_cd (str(6)): 주문구분코드. [KRX] 00 : 지정가 01 : 시장가 02 : 조건부지정가 03 : 최유리지정가 04 : 최우선지정가 05 : 장전 시간외 06 : 장후 시간외 07 : 시간외 단일가 11 : IOC지정가 (즉시체결,잔량취소) 12 : FOK지정가 (즉시체결,전량취소) 13 : IOC시장가 (즉시체결,잔량취소) 14 : FOK시장가 (즉시체결,전량취소) 15 : IOC최유리 (즉시체결,잔량취소) 16 : FOK최유리 (즉시체결,전량취소) 21 : 중간가 22 : 스톱지정가 23 : 중간가IOC 24 : 중간가FOK  [NXT] 00 : 지정가 03 : 최유리지정가 04 : 최우선지정가 11 : IOC지정가 (즉시체결,잔량취소) 12 : FOK지정가 (즉시체결,전량취소) 13 : IOC시장가 (즉시체결,잔량취소) 14 : FOK시장가 (즉시체결,전량취소) 15 : IOC최유리 (즉시체결,잔량취소) 16 : FOK최유리 (즉시체결,전량취소) 21 : 중간가 22 : 스톱지정가 23 : 중간가IOC 24 : 중간가FOK  [SOR] 00 : 지정가 01 : 시장가 03 : 최유리지정가 04 : 최우선지정가 11 : IOC지정가 (즉시체결,잔량취소) 12 : FOK지정가 (즉시체결,전량취소) 13 : IOC시장가 (즉시체결,잔량취소) 14 : FOK시장가 (즉시체결,전량취소) 15 : IOC최유리 (즉시체결,잔량취소) 16 : FOK최유리 (즉시체결,전량취소)
-      out_mgco_aptm_odno (str(5)): 운용사지정주문번호
-      out_excg_dvsn_cd (str(2)): 거래소구분코드
-      out_excg_id_dvsn_cd (str(3)): 거래소ID구분코드
-      out_excg_id_dvsn_name (str(100)): 거래소ID구분명
-      out_stpm_cndt_pric (str(9)): 스톱지정가조건가격
-      out_stpm_efct_occr_yn (str(1)): 스톱지정가효력발생여부
+      out_output (list): 응답상세. array
+        - ord_gno_brno (str(5)): 주문채번지점번호. 주문시 한국투자증권 시스템에서 지정된 영업점코드
+        - odno (str(10)): 주문번호. 주문시 한국투자증권 시스템에서 채번된 주문번호
+        - orgn_odno (str(6)): 원주문번호. 정정/취소주문 인경우 원주문번호
+        - ord_dvsn_name (str(5)): 주문구분명
+        - pdno (str(10)): 상품번호. 종목번호(뒤 6자리만 해당)
+        - prdt_name (str(6)): 상품명. 종목명
+        - rvse_cncl_dvsn_name (str(5)): 정정취소구분명. 정정 또는 취소 여부 표시
+        - ord_qty (str(10)): 주문수량
+        - ord_unpr (str(6)): 주문단가. 1주당 주문가격
+        - ord_tmd (str(5)): 주문시각. 주문시각(시분초HHMMSS)
+        - tot_ccld_qty (str(10)): 총체결수량. 주문 수량 중 체결된 수량
+        - tot_ccld_amt (str(6)): 총체결금액. 주문금액 중 체결금액
+        - psbl_qty (str(5)): 가능수량. 정정/취소 주문 가능 수량
+        - sll_buy_dvsn_cd (str(10)): 매도매수구분코드. 01 : 매도 / 02 : 매수
+        - ord_dvsn_cd (str(6)): 주문구분코드. [KRX] 00 : 지정가 01 : 시장가 02 : 조건부지정가 03 : 최유리지정가 04 : 최우선지정가 05 : 장전 시간외 06 : 장후 시간외 07 : 시간외 단일가 11 : IOC지정가 (즉시체결,잔량취소) 12 : FOK지정가 (즉시체결,전량취소) 13 : IOC시장가 (즉시체결,잔량취소) 14 : FOK시장가 (즉시체결,전량취소) 15 : IOC최유리 (즉시체결,잔량취소) 16 : FOK최유리 (즉시체결,전량취소) 21 : 중간가 22 : 스톱지정가 23 : 중간가IOC 24 : 중간가FOK  [NXT] 00 : 지정가 03 : 최유리지정가 04 : 최우선지정가 11 : IOC지정가 (즉시체결,잔량취소) 12 : FOK지정가 (즉시체결,전량취소) 13 : IOC시장가 (즉시체결,잔량취소) 14 : FOK시장가 (즉시체결,전량취소) 15 : IOC최유리 (즉시체결,잔량취소) 16 : FOK최유리 (즉시체결,전량취소) 21 : 중간가 22 : 스톱지정가 23 : 중간가IOC 24 : 중간가FOK  [SOR] 00 : 지정가 01 : 시장가 03 : 최유리지정가 04 : 최우선지정가 11 : IOC지정가 (즉시체결,잔량취소) 12 : FOK지정가 (즉시체결,전량취소) 13 : IOC시장가 (즉시체결,잔량취소) 14 : FOK시장가 (즉시체결,전량취소) 15 : IOC최유리 (즉시체결,잔량취소) 16 : FOK최유리 (즉시체결,전량취소)
+        - mgco_aptm_odno (str(5)): 운용사지정주문번호
+        - excg_dvsn_cd (str(2)): 거래소구분코드
+        - excg_id_dvsn_cd (str(3)): 거래소ID구분코드
+        - excg_id_dvsn_name (str(100)): 거래소ID구분명
+        - stpm_cndt_pric (str(9)): 스톱지정가조건가격
+        - stpm_efct_occr_yn (str(1)): 스톱지정가효력발생여부
     
     Raises:
       Exception: 에러
@@ -527,7 +548,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-004',
     }
     params = {
       'CANO': in_CANO,
@@ -541,7 +561,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -556,27 +576,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_ord_gno_brno'] = out_data['ord_gno_brno']
-    return_data['out_odno'] = out_data['odno']
-    return_data['out_orgn_odno'] = out_data['orgn_odno']
-    return_data['out_ord_dvsn_name'] = out_data['ord_dvsn_name']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_prdt_name'] = out_data['prdt_name']
-    return_data['out_rvse_cncl_dvsn_name'] = out_data['rvse_cncl_dvsn_name']
-    return_data['out_ord_qty'] = out_data['ord_qty']
-    return_data['out_ord_unpr'] = out_data['ord_unpr']
-    return_data['out_ord_tmd'] = out_data['ord_tmd']
-    return_data['out_tot_ccld_qty'] = out_data['tot_ccld_qty']
-    return_data['out_tot_ccld_amt'] = out_data['tot_ccld_amt']
-    return_data['out_psbl_qty'] = out_data['psbl_qty']
-    return_data['out_sll_buy_dvsn_cd'] = out_data['sll_buy_dvsn_cd']
-    return_data['out_ord_dvsn_cd'] = out_data['ord_dvsn_cd']
-    return_data['out_mgco_aptm_odno'] = out_data['mgco_aptm_odno']
-    return_data['out_excg_dvsn_cd'] = out_data['excg_dvsn_cd']
-    return_data['out_excg_id_dvsn_cd'] = out_data['excg_id_dvsn_cd']
-    return_data['out_excg_id_dvsn_name'] = out_data['excg_id_dvsn_name']
-    return_data['out_stpm_cndt_pric'] = out_data['stpm_cndt_pric']
-    return_data['out_stpm_efct_occr_yn'] = out_data['stpm_efct_occr_yn']
     
     return return_data
 
@@ -628,49 +627,49 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output1 (str): 응답상세. array
-      out_ord_dt (str(8)): 주문일자
-      out_ord_gno_brno (str(5)): 주문채번지점번호
-      out_odno (str(10)): 주문번호
-      out_orgn_odno (str(10)): 원주문번호
-      out_ord_dvsn_name (str(60)): 주문구분명
-      out_sll_buy_dvsn_cd (str(2)): 매도매수구분코드
-      out_sll_buy_dvsn_cd_name (str(60)): 매도매수구분코드명
-      out_pdno (str(12)): 상품번호
-      out_prdt_name (str(60)): 상품명
-      out_ord_qty (str(10)): 주문수량
-      out_ord_unpr (str(19)): 주문단가
-      out_ord_tmd (str(6)): 주문시각
-      out_tot_ccld_qty (str(10)): 총체결수량
-      out_avg_prvs (str(19)): 평균가
-      out_cncl_yn (str(1)): 취소여부
-      out_tot_ccld_amt (str(19)): 총체결금액
-      out_loan_dt (str(8)): 대출일자
-      out_ordr_empno (str(60)): 주문자사번
-      out_ord_dvsn_cd (str(2)): 주문구분코드
-      out_cnc_cfrm_qty (str(10)): 취소확인수량
-      out_rmn_qty (str(10)): 잔여수량
-      out_rjct_qty (str(10)): 거부수량
-      out_ccld_cndt_name (str(10)): 체결조건명
-      out_inqr_ip_addr (str(15)): 조회IP주소
-      out_cpbc_ordp_ord_rcit_dvsn_cd (str(2)): 전산주문표주문접수구분코드
-      out_cpbc_ordp_infm_mthd_dvsn_cd (str(2)): 전산주문표통보방법구분코드
-      out_infm_tmd (str(6)): 통보시각
-      out_ctac_tlno (str(20)): 연락전화번호
-      out_prdt_type_cd (str(3)): 상품유형코드
-      out_excg_dvsn_cd (str(2)): 거래소구분코드
-      out_cpbc_ordp_mtrl_dvsn_cd (str(2)): 전산주문표자료구분코드
-      out_ord_orgno (str(5)): 주문조직번호
-      out_rsvn_ord_end_dt (str(8)): 예약주문종료일자
-      out_excg_id_dvsn_Cd (str(3)): 거래소ID구분코드
-      out_stpm_cndt_pric (str(9)): 스톱지정가조건가격
-      out_stpm_efct_occr_dtmd (str(9)): 스톱지정가효력발생상세시각
-      out_output2 (str): 응답상세. single
-      out_tot_ord_qty (str(10)): 총주문수량
-      out_tot_ccld_qty (str(10)): 총체결수량
-      out_tot_ccld_amt (str(19)): 매입평균가격
-      out_prsm_tlex_smtl (str(19)): 총체결금액
-      out_pchs_avg_pric (str(184)): 추정제비용합계
+      out_output1 (list): 응답상세. array
+        - ord_dt (str(8)): 주문일자
+        - ord_gno_brno (str(5)): 주문채번지점번호
+        - odno (str(10)): 주문번호
+        - orgn_odno (str(10)): 원주문번호
+        - ord_dvsn_name (str(60)): 주문구분명
+        - sll_buy_dvsn_cd (str(2)): 매도매수구분코드
+        - sll_buy_dvsn_cd_name (str(60)): 매도매수구분코드명
+        - pdno (str(12)): 상품번호
+        - prdt_name (str(60)): 상품명
+        - ord_qty (str(10)): 주문수량
+        - ord_unpr (str(19)): 주문단가
+        - ord_tmd (str(6)): 주문시각
+        - tot_ccld_qty (str(10)): 총체결수량
+        - avg_prvs (str(19)): 평균가
+        - cncl_yn (str(1)): 취소여부
+        - tot_ccld_amt (str(19)): 총체결금액
+        - loan_dt (str(8)): 대출일자
+        - ordr_empno (str(60)): 주문자사번
+        - ord_dvsn_cd (str(2)): 주문구분코드
+        - cnc_cfrm_qty (str(10)): 취소확인수량
+        - rmn_qty (str(10)): 잔여수량
+        - rjct_qty (str(10)): 거부수량
+        - ccld_cndt_name (str(10)): 체결조건명
+        - inqr_ip_addr (str(15)): 조회IP주소
+        - cpbc_ordp_ord_rcit_dvsn_cd (str(2)): 전산주문표주문접수구분코드
+        - cpbc_ordp_infm_mthd_dvsn_cd (str(2)): 전산주문표통보방법구분코드
+        - infm_tmd (str(6)): 통보시각
+        - ctac_tlno (str(20)): 연락전화번호
+        - prdt_type_cd (str(3)): 상품유형코드
+        - excg_dvsn_cd (str(2)): 거래소구분코드
+        - cpbc_ordp_mtrl_dvsn_cd (str(2)): 전산주문표자료구분코드
+        - ord_orgno (str(5)): 주문조직번호
+        - rsvn_ord_end_dt (str(8)): 예약주문종료일자
+        - excg_id_dvsn_Cd (str(3)): 거래소ID구분코드
+        - stpm_cndt_pric (str(9)): 스톱지정가조건가격
+        - stpm_efct_occr_dtmd (str(9)): 스톱지정가효력발생상세시각
+        - output2 (str): 응답상세. single
+        - tot_ord_qty (str(10)): 총주문수량
+        - tot_ccld_qty (str(10)): 총체결수량
+        - tot_ccld_amt (str(19)): 매입평균가격
+        - prsm_tlex_smtl (str(19)): 총체결금액
+        - pchs_avg_pric (str(184)): 추정제비용합계
     
     Raises:
       Exception: 에러
@@ -693,7 +692,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-005',
     }
     params = {
       'CANO': in_CANO,
@@ -716,7 +714,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -731,48 +729,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output1'] = out_data['output1']
-    return_data['out_ord_dt'] = out_data['ord_dt']
-    return_data['out_ord_gno_brno'] = out_data['ord_gno_brno']
-    return_data['out_odno'] = out_data['odno']
-    return_data['out_orgn_odno'] = out_data['orgn_odno']
-    return_data['out_ord_dvsn_name'] = out_data['ord_dvsn_name']
-    return_data['out_sll_buy_dvsn_cd'] = out_data['sll_buy_dvsn_cd']
-    return_data['out_sll_buy_dvsn_cd_name'] = out_data['sll_buy_dvsn_cd_name']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_prdt_name'] = out_data['prdt_name']
-    return_data['out_ord_qty'] = out_data['ord_qty']
-    return_data['out_ord_unpr'] = out_data['ord_unpr']
-    return_data['out_ord_tmd'] = out_data['ord_tmd']
-    return_data['out_tot_ccld_qty'] = out_data['tot_ccld_qty']
-    return_data['out_avg_prvs'] = out_data['avg_prvs']
-    return_data['out_cncl_yn'] = out_data['cncl_yn']
-    return_data['out_tot_ccld_amt'] = out_data['tot_ccld_amt']
-    return_data['out_loan_dt'] = out_data['loan_dt']
-    return_data['out_ordr_empno'] = out_data['ordr_empno']
-    return_data['out_ord_dvsn_cd'] = out_data['ord_dvsn_cd']
-    return_data['out_cnc_cfrm_qty'] = out_data['cnc_cfrm_qty']
-    return_data['out_rmn_qty'] = out_data['rmn_qty']
-    return_data['out_rjct_qty'] = out_data['rjct_qty']
-    return_data['out_ccld_cndt_name'] = out_data['ccld_cndt_name']
-    return_data['out_inqr_ip_addr'] = out_data['inqr_ip_addr']
-    return_data['out_cpbc_ordp_ord_rcit_dvsn_cd'] = out_data['cpbc_ordp_ord_rcit_dvsn_cd']
-    return_data['out_cpbc_ordp_infm_mthd_dvsn_cd'] = out_data['cpbc_ordp_infm_mthd_dvsn_cd']
-    return_data['out_infm_tmd'] = out_data['infm_tmd']
-    return_data['out_ctac_tlno'] = out_data['ctac_tlno']
-    return_data['out_prdt_type_cd'] = out_data['prdt_type_cd']
-    return_data['out_excg_dvsn_cd'] = out_data['excg_dvsn_cd']
-    return_data['out_cpbc_ordp_mtrl_dvsn_cd'] = out_data['cpbc_ordp_mtrl_dvsn_cd']
-    return_data['out_ord_orgno'] = out_data['ord_orgno']
-    return_data['out_rsvn_ord_end_dt'] = out_data['rsvn_ord_end_dt']
-    return_data['out_excg_id_dvsn_Cd'] = out_data['excg_id_dvsn_Cd']
-    return_data['out_stpm_cndt_pric'] = out_data['stpm_cndt_pric']
-    return_data['out_stpm_efct_occr_dtmd'] = out_data['stpm_efct_occr_dtmd']
-    return_data['out_output2'] = out_data['output2']
-    return_data['out_tot_ord_qty'] = out_data['tot_ord_qty']
-    return_data['out_tot_ccld_qty'] = out_data['tot_ccld_qty']
-    return_data['out_tot_ccld_amt'] = out_data['tot_ccld_amt']
-    return_data['out_prsm_tlex_smtl'] = out_data['prsm_tlex_smtl']
-    return_data['out_pchs_avg_pric'] = out_data['pchs_avg_pric']
     
     return return_data
 
@@ -819,58 +775,58 @@ class KoreaInvestmentAPI():
       out_msg1 (str(80)): 응답메세지. 응답메세지
       out_ctx_area_fk100 (str(100)): 연속조회검색조건100
       out_ctx_area_nk100 (str(100)): 연속조회키100
-      out_output1 (str): 응답상세1. Array
-      out_pdno (str(12)): 상품번호. 종목번호(뒷 6자리)
-      out_prdt_name (str(60)): 상품명. 종목명
-      out_trad_dvsn_name (str(60)): 매매구분명. 매수매도구분
-      out_bfdy_buy_qty (str(10)): 전일매수수량
-      out_bfdy_sll_qty (str(10)): 전일매도수량
-      out_thdt_buyqty (str(10)): 금일매수수량
-      out_thdt_sll_qty (str(10)): 금일매도수량
-      out_hldg_qty (str(19)): 보유수량
-      out_ord_psbl_qty (str(10)): 주문가능수량
-      out_pchs_avg_pric (str(22)): 매입평균가격. 매입금액 / 보유수량
-      out_pchs_amt (str(19)): 매입금액
-      out_prpr (str(19)): 현재가
-      out_evlu_amt (str(19)): 평가금액
-      out_evlu_pfls_amt (str(19)): 평가손익금액. 평가금액 - 매입금액
-      out_evlu_pfls_rt (str(9)): 평가손익율
-      out_evlu_erng_rt (str(31)): 평가수익율. 미사용항목(0으로 출력)
-      out_loan_dt (str(8)): 대출일자. INQR_DVSN(조회구분)을 01(대출일별)로 설정해야 값이 나옴
-      out_loan_amt (str(19)): 대출금액
-      out_stln_slng_chgs (str(19)): 대주매각대금
-      out_expd_dt (str(8)): 만기일자
-      out_fltt_rt (str(31)): 등락율
-      out_bfdy_cprs_icdc (str(19)): 전일대비증감
-      out_item_mgna_rt_name (str(20)): 종목증거금율명
-      out_grta_rt_name (str(20)): 보증금율명
-      out_sbst_pric (str(19)): 대용가격. 증권매매의 위탁보증금으로서 현금 대신에 사용되는 유가증권 가격
-      out_stck_loan_unpr (str(22)): 주식대출단가
-      out_output2 (str): 응답상세2. Array
-      out_dnca_tot_amt (str(19)): 예수금총금액. 예수금
-      out_nxdy_excc_amt (str(19)): 익일정산금액. D+1 예수금
-      out_prvs_rcdl_excc_amt (str(19)): 가수도정산금액. D+2 예수금
-      out_cma_evlu_amt (str(19)): CMA평가금액
-      out_bfdy_buy_amt (str(19)): 전일매수금액
-      out_thdt_buy_amt (str(19)): 금일매수금액
-      out_nxdy_auto_rdpt_amt (str(19)): 익일자동상환금액
-      out_bfdy_sll_amt (str(19)): 전일매도금액
-      out_thdt_sll_amt (str(19)): 금일매도금액
-      out_d2_auto_rdpt_amt (str(19)): D+2자동상환금액
-      out_bfdy_tlex_amt (str(19)): 전일제비용금액
-      out_thdt_tlex_amt (str(19)): 금일제비용금액
-      out_tot_loan_amt (str(19)): 총대출금액
-      out_scts_evlu_amt (str(19)): 유가평가금액
-      out_tot_evlu_amt (str(19)): 총평가금액. 유가증권 평가금액 합계금액 + D+2 예수금
-      out_nass_amt (str(19)): 순자산금액
-      out_fncg_gld_auto_rdpt_yn (str(1)): 융자금자동상환여부. 보유현금에 대한 융자금만 차감여부 신용융자 매수체결 시점에서는 융자비율을 매매대금 100%로 계산 하였다가 수도결제일에 보증금에 해당하는 금액을 고객의 현금으로 충당하여 융자금을 감소시키는 업무
-      out_pchs_amt_smtl_amt (str(19)): 매입금액합계금액
-      out_evlu_amt_smtl_amt (str(19)): 평가금액합계금액. 유가증권 평가금액 합계금액
-      out_evlu_pfls_smtl_amt (str(19)): 평가손익합계금액
-      out_tot_stln_slng_chgs (str(19)): 총대주매각대금
-      out_bfdy_tot_asst_evlu_amt (str(19)): 전일총자산평가금액
-      out_asst_icdc_amt (str(19)): 자산증감액
-      out_asst_icdc_erng_rt (str(31)): 자산증감수익율. 데이터 미제공
+      out_output1 (list): 응답상세1. Array
+        - pdno (str(12)): 상품번호. 종목번호(뒷 6자리)
+        - prdt_name (str(60)): 상품명. 종목명
+        - trad_dvsn_name (str(60)): 매매구분명. 매수매도구분
+        - bfdy_buy_qty (str(10)): 전일매수수량
+        - bfdy_sll_qty (str(10)): 전일매도수량
+        - thdt_buyqty (str(10)): 금일매수수량
+        - thdt_sll_qty (str(10)): 금일매도수량
+        - hldg_qty (str(19)): 보유수량
+        - ord_psbl_qty (str(10)): 주문가능수량
+        - pchs_avg_pric (str(22)): 매입평균가격. 매입금액 / 보유수량
+        - pchs_amt (str(19)): 매입금액
+        - prpr (str(19)): 현재가
+        - evlu_amt (str(19)): 평가금액
+        - evlu_pfls_amt (str(19)): 평가손익금액. 평가금액 - 매입금액
+        - evlu_pfls_rt (str(9)): 평가손익율
+        - evlu_erng_rt (str(31)): 평가수익율. 미사용항목(0으로 출력)
+        - loan_dt (str(8)): 대출일자. INQR_DVSN(조회구분)을 01(대출일별)로 설정해야 값이 나옴
+        - loan_amt (str(19)): 대출금액
+        - stln_slng_chgs (str(19)): 대주매각대금
+        - expd_dt (str(8)): 만기일자
+        - fltt_rt (str(31)): 등락율
+        - bfdy_cprs_icdc (str(19)): 전일대비증감
+        - item_mgna_rt_name (str(20)): 종목증거금율명
+        - grta_rt_name (str(20)): 보증금율명
+        - sbst_pric (str(19)): 대용가격. 증권매매의 위탁보증금으로서 현금 대신에 사용되는 유가증권 가격
+        - stck_loan_unpr (str(22)): 주식대출단가
+        - output2 (list): 응답상세2. Array
+        - dnca_tot_amt (str(19)): 예수금총금액. 예수금
+        - nxdy_excc_amt (str(19)): 익일정산금액. D+1 예수금
+        - prvs_rcdl_excc_amt (str(19)): 가수도정산금액. D+2 예수금
+        - cma_evlu_amt (str(19)): CMA평가금액
+        - bfdy_buy_amt (str(19)): 전일매수금액
+        - thdt_buy_amt (str(19)): 금일매수금액
+        - nxdy_auto_rdpt_amt (str(19)): 익일자동상환금액
+        - bfdy_sll_amt (str(19)): 전일매도금액
+        - thdt_sll_amt (str(19)): 금일매도금액
+        - d2_auto_rdpt_amt (str(19)): D+2자동상환금액
+        - bfdy_tlex_amt (str(19)): 전일제비용금액
+        - thdt_tlex_amt (str(19)): 금일제비용금액
+        - tot_loan_amt (str(19)): 총대출금액
+        - scts_evlu_amt (str(19)): 유가평가금액
+        - tot_evlu_amt (str(19)): 총평가금액. 유가증권 평가금액 합계금액 + D+2 예수금
+        - nass_amt (str(19)): 순자산금액
+        - fncg_gld_auto_rdpt_yn (str(1)): 융자금자동상환여부. 보유현금에 대한 융자금만 차감여부 신용융자 매수체결 시점에서는 융자비율을 매매대금 100%로 계산 하였다가 수도결제일에 보증금에 해당하는 금액을 고객의 현금으로 충당하여 융자금을 감소시키는 업무
+        - pchs_amt_smtl_amt (str(19)): 매입금액합계금액
+        - evlu_amt_smtl_amt (str(19)): 평가금액합계금액. 유가증권 평가금액 합계금액
+        - evlu_pfls_smtl_amt (str(19)): 평가손익합계금액
+        - tot_stln_slng_chgs (str(19)): 총대주매각대금
+        - bfdy_tot_asst_evlu_amt (str(19)): 전일총자산평가금액
+        - asst_icdc_amt (str(19)): 자산증감액
+        - asst_icdc_erng_rt (str(31)): 자산증감수익율. 데이터 미제공
     
     Raises:
       Exception: 에러
@@ -893,7 +849,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-006',
     }
     params = {
       'CANO': in_CANO,
@@ -912,7 +867,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -929,57 +884,6 @@ class KoreaInvestmentAPI():
     return_data['out_ctx_area_fk100'] = out_data['ctx_area_fk100']
     return_data['out_ctx_area_nk100'] = out_data['ctx_area_nk100']
     return_data['out_output1'] = out_data['output1']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_prdt_name'] = out_data['prdt_name']
-    return_data['out_trad_dvsn_name'] = out_data['trad_dvsn_name']
-    return_data['out_bfdy_buy_qty'] = out_data['bfdy_buy_qty']
-    return_data['out_bfdy_sll_qty'] = out_data['bfdy_sll_qty']
-    return_data['out_thdt_buyqty'] = out_data['thdt_buyqty']
-    return_data['out_thdt_sll_qty'] = out_data['thdt_sll_qty']
-    return_data['out_hldg_qty'] = out_data['hldg_qty']
-    return_data['out_ord_psbl_qty'] = out_data['ord_psbl_qty']
-    return_data['out_pchs_avg_pric'] = out_data['pchs_avg_pric']
-    return_data['out_pchs_amt'] = out_data['pchs_amt']
-    return_data['out_prpr'] = out_data['prpr']
-    return_data['out_evlu_amt'] = out_data['evlu_amt']
-    return_data['out_evlu_pfls_amt'] = out_data['evlu_pfls_amt']
-    return_data['out_evlu_pfls_rt'] = out_data['evlu_pfls_rt']
-    return_data['out_evlu_erng_rt'] = out_data['evlu_erng_rt']
-    return_data['out_loan_dt'] = out_data['loan_dt']
-    return_data['out_loan_amt'] = out_data['loan_amt']
-    return_data['out_stln_slng_chgs'] = out_data['stln_slng_chgs']
-    return_data['out_expd_dt'] = out_data['expd_dt']
-    return_data['out_fltt_rt'] = out_data['fltt_rt']
-    return_data['out_bfdy_cprs_icdc'] = out_data['bfdy_cprs_icdc']
-    return_data['out_item_mgna_rt_name'] = out_data['item_mgna_rt_name']
-    return_data['out_grta_rt_name'] = out_data['grta_rt_name']
-    return_data['out_sbst_pric'] = out_data['sbst_pric']
-    return_data['out_stck_loan_unpr'] = out_data['stck_loan_unpr']
-    return_data['out_output2'] = out_data['output2']
-    return_data['out_dnca_tot_amt'] = out_data['dnca_tot_amt']
-    return_data['out_nxdy_excc_amt'] = out_data['nxdy_excc_amt']
-    return_data['out_prvs_rcdl_excc_amt'] = out_data['prvs_rcdl_excc_amt']
-    return_data['out_cma_evlu_amt'] = out_data['cma_evlu_amt']
-    return_data['out_bfdy_buy_amt'] = out_data['bfdy_buy_amt']
-    return_data['out_thdt_buy_amt'] = out_data['thdt_buy_amt']
-    return_data['out_nxdy_auto_rdpt_amt'] = out_data['nxdy_auto_rdpt_amt']
-    return_data['out_bfdy_sll_amt'] = out_data['bfdy_sll_amt']
-    return_data['out_thdt_sll_amt'] = out_data['thdt_sll_amt']
-    return_data['out_d2_auto_rdpt_amt'] = out_data['d2_auto_rdpt_amt']
-    return_data['out_bfdy_tlex_amt'] = out_data['bfdy_tlex_amt']
-    return_data['out_thdt_tlex_amt'] = out_data['thdt_tlex_amt']
-    return_data['out_tot_loan_amt'] = out_data['tot_loan_amt']
-    return_data['out_scts_evlu_amt'] = out_data['scts_evlu_amt']
-    return_data['out_tot_evlu_amt'] = out_data['tot_evlu_amt']
-    return_data['out_nass_amt'] = out_data['nass_amt']
-    return_data['out_fncg_gld_auto_rdpt_yn'] = out_data['fncg_gld_auto_rdpt_yn']
-    return_data['out_pchs_amt_smtl_amt'] = out_data['pchs_amt_smtl_amt']
-    return_data['out_evlu_amt_smtl_amt'] = out_data['evlu_amt_smtl_amt']
-    return_data['out_evlu_pfls_smtl_amt'] = out_data['evlu_pfls_smtl_amt']
-    return_data['out_tot_stln_slng_chgs'] = out_data['tot_stln_slng_chgs']
-    return_data['out_bfdy_tot_asst_evlu_amt'] = out_data['bfdy_tot_asst_evlu_amt']
-    return_data['out_asst_icdc_amt'] = out_data['asst_icdc_amt']
-    return_data['out_asst_icdc_erng_rt'] = out_data['asst_icdc_erng_rt']
     
     return return_data
 
@@ -1029,18 +933,18 @@ class KoreaInvestmentAPI():
       out_msg_cd (str(8)): 응답코드. 응답코드
       out_msg1 (str(80)): 응답메세지. 응답메세지
       out_output (str): 응답상세. Single
-      out_ord_psbl_cash (str(19)): 주문가능현금. 예수금으로 계산된 주문가능금액
-      out_ord_psbl_sbst (str(19)): 주문가능대용
-      out_ruse_psbl_amt (str(19)): 재사용가능금액. 전일/금일 매도대금으로 계산된 주문가능금액
-      out_fund_rpch_chgs (str(19)): 펀드환매대금
-      out_psbl_qty_calc_unpr (str(19)): 가능수량계산단가
-      out_nrcvb_buy_amt (str(19)): 미수없는매수금액. 미수를 사용하지 않으실 경우 nrcvb_buy_amt(미수없는매수금액)을 확인
-      out_nrcvb_buy_qty (str(10)): 미수없는매수수량. 미수를 사용하지 않으실 경우 nrcvb_buy_qty(미수없는매수수량)을 확인  * 특정 종목 전량매수 시 가능수량을 확인하실 경우   조회 시 ORD_DVSN:01(시장가)로 지정 필수 * 다만, 조건부지정가 등 특정 주문구분(ex.IOC)으로 주문 시 가능수량을 확인할 경우 주문 시와 동일한 주문구분(ex.IOC) 입력
-      out_max_buy_amt (str(19)): 최대매수금액. 미수를 사용하시는 경우 max_buy_amt(최대매수금액)를 확인
-      out_max_buy_qty (str(10)): 최대매수수량. 미수를 사용하시는 경우 max_buy_qty(최대매수수량)를 확인  * 특정 종목 전량매수 시 가능수량을 확인하실 경우   조회 시 ORD_DVSN:01(시장가)로 지정 필수 * 다만, 조건부지정가 등 특정 주문구분(ex.IOC)으로 주문 시 가능수량을 확인할 경우 주문 시와 동일한 주문구분(ex.IOC) 입력
-      out_cma_evlu_amt (str(19)): CMA평가금액
-      out_ovrs_re_use_amt_wcrc (str(19)): 해외재사용금액원화
-      out_ord_psbl_frcr_amt_wcrc (str(19)): 주문가능외화금액원화
+        - ord_psbl_cash (str(19)): 주문가능현금. 예수금으로 계산된 주문가능금액
+        - ord_psbl_sbst (str(19)): 주문가능대용
+        - ruse_psbl_amt (str(19)): 재사용가능금액. 전일/금일 매도대금으로 계산된 주문가능금액
+        - fund_rpch_chgs (str(19)): 펀드환매대금
+        - psbl_qty_calc_unpr (str(19)): 가능수량계산단가
+        - nrcvb_buy_amt (str(19)): 미수없는매수금액. 미수를 사용하지 않으실 경우 nrcvb_buy_amt(미수없는매수금액)을 확인
+        - nrcvb_buy_qty (str(10)): 미수없는매수수량. 미수를 사용하지 않으실 경우 nrcvb_buy_qty(미수없는매수수량)을 확인  * 특정 종목 전량매수 시 가능수량을 확인하실 경우   조회 시 ORD_DVSN:01(시장가)로 지정 필수 * 다만, 조건부지정가 등 특정 주문구분(ex.IOC)으로 주문 시 가능수량을 확인할 경우 주문 시와 동일한 주문구분(ex.IOC) 입력
+        - max_buy_amt (str(19)): 최대매수금액. 미수를 사용하시는 경우 max_buy_amt(최대매수금액)를 확인
+        - max_buy_qty (str(10)): 최대매수수량. 미수를 사용하시는 경우 max_buy_qty(최대매수수량)를 확인  * 특정 종목 전량매수 시 가능수량을 확인하실 경우   조회 시 ORD_DVSN:01(시장가)로 지정 필수 * 다만, 조건부지정가 등 특정 주문구분(ex.IOC)으로 주문 시 가능수량을 확인할 경우 주문 시와 동일한 주문구분(ex.IOC) 입력
+        - cma_evlu_amt (str(19)): CMA평가금액
+        - ovrs_re_use_amt_wcrc (str(19)): 해외재사용금액원화
+        - ord_psbl_frcr_amt_wcrc (str(19)): 주문가능외화금액원화
     
     Raises:
       Exception: 에러
@@ -1063,7 +967,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-007',
     }
     params = {
       'CANO': in_CANO,
@@ -1078,7 +981,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -1093,18 +996,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_ord_psbl_cash'] = out_data['ord_psbl_cash']
-    return_data['out_ord_psbl_sbst'] = out_data['ord_psbl_sbst']
-    return_data['out_ruse_psbl_amt'] = out_data['ruse_psbl_amt']
-    return_data['out_fund_rpch_chgs'] = out_data['fund_rpch_chgs']
-    return_data['out_psbl_qty_calc_unpr'] = out_data['psbl_qty_calc_unpr']
-    return_data['out_nrcvb_buy_amt'] = out_data['nrcvb_buy_amt']
-    return_data['out_nrcvb_buy_qty'] = out_data['nrcvb_buy_qty']
-    return_data['out_max_buy_amt'] = out_data['max_buy_amt']
-    return_data['out_max_buy_qty'] = out_data['max_buy_qty']
-    return_data['out_cma_evlu_amt'] = out_data['cma_evlu_amt']
-    return_data['out_ovrs_re_use_amt_wcrc'] = out_data['ovrs_re_use_amt_wcrc']
-    return_data['out_ord_psbl_frcr_amt_wcrc'] = out_data['ord_psbl_frcr_amt_wcrc']
     
     return return_data
 
@@ -1141,19 +1032,19 @@ class KoreaInvestmentAPI():
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
       out_output1 (str): 응답상세
-      out_pdno (str(12)): 상품번호
-      out_prdt_name (str(60)): 상품명
-      out_buy_qty (str(10)): 매수수량
-      out_sll_qty (str(10)): 매도수량
-      out_cblc_qty (str(19)): 잔고수량
-      out_nsvg_qty (str(19)): 비저축수량
-      out_ord_psbl_qty (str(10)): 주문가능수량
-      out_pchs_avg_pric (str(184)): 매입평균가격
-      out_pchs_amt (str(19)): 매입금액
-      out_now_pric (str(8)): 현재가
-      out_evlu_amt (str(19)): 평가금액
-      out_evlu_pfls_amt (str(19)): 평가손익금액
-      out_evlu_pfls_rt (str(72)): 평가손익율
+        - pdno (str(12)): 상품번호
+        - prdt_name (str(60)): 상품명
+        - buy_qty (str(10)): 매수수량
+        - sll_qty (str(10)): 매도수량
+        - cblc_qty (str(19)): 잔고수량
+        - nsvg_qty (str(19)): 비저축수량
+        - ord_psbl_qty (str(10)): 주문가능수량
+        - pchs_avg_pric (str(184)): 매입평균가격
+        - pchs_amt (str(19)): 매입금액
+        - now_pric (str(8)): 현재가
+        - evlu_amt (str(19)): 평가금액
+        - evlu_pfls_amt (str(19)): 평가손익금액
+        - evlu_pfls_rt (str(72)): 평가손익율
     
     Raises:
       Exception: 에러
@@ -1176,7 +1067,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': '국내주식-165',
     }
     params = {
       'CANO': in_CANO,
@@ -1187,7 +1077,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -1202,19 +1092,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output1'] = out_data['output1']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_prdt_name'] = out_data['prdt_name']
-    return_data['out_buy_qty'] = out_data['buy_qty']
-    return_data['out_sll_qty'] = out_data['sll_qty']
-    return_data['out_cblc_qty'] = out_data['cblc_qty']
-    return_data['out_nsvg_qty'] = out_data['nsvg_qty']
-    return_data['out_ord_psbl_qty'] = out_data['ord_psbl_qty']
-    return_data['out_pchs_avg_pric'] = out_data['pchs_avg_pric']
-    return_data['out_pchs_amt'] = out_data['pchs_amt']
-    return_data['out_now_pric'] = out_data['now_pric']
-    return_data['out_evlu_amt'] = out_data['evlu_amt']
-    return_data['out_evlu_pfls_amt'] = out_data['evlu_pfls_amt']
-    return_data['out_evlu_pfls_rt'] = out_data['evlu_pfls_rt']
     
     return return_data
 
@@ -1254,18 +1131,18 @@ class KoreaInvestmentAPI():
       out_msg_cd (str(8)): 응답코드. 응답코드
       out_msg1 (str(80)): 응답메세지. 응답메시지
       out_output (str): 응답상세
-      out_ord_psbl_cash (str(19)): 주문가능현금
-      out_ord_psbl_sbst (str(19)): 주문가능대용
-      out_ruse_psbl_amt (str(19)): 재사용가능금액
-      out_fund_rpch_chgs (str(19)): 펀드환매대금
-      out_psbl_qty_calc_unpr (str(19)): 가능수량계산단가
-      out_nrcvb_buy_amt (str(19)): 미수없는매수금액
-      out_nrcvb_buy_qty (str(10)): 미수없는매수수량
-      out_max_buy_amt (str(19)): 최대매수금액
-      out_max_buy_qty (str(10)): 최대매수수량
-      out_cma_evlu_amt (str(19)): CMA평가금액
-      out_ovrs_re_use_amt_wcrc (str(19)): 해외재사용금액원화
-      out_ord_psbl_frcr_amt_wcrc (str(19)): 주문가능외화금액원화
+        - ord_psbl_cash (str(19)): 주문가능현금
+        - ord_psbl_sbst (str(19)): 주문가능대용
+        - ruse_psbl_amt (str(19)): 재사용가능금액
+        - fund_rpch_chgs (str(19)): 펀드환매대금
+        - psbl_qty_calc_unpr (str(19)): 가능수량계산단가
+        - nrcvb_buy_amt (str(19)): 미수없는매수금액
+        - nrcvb_buy_qty (str(10)): 미수없는매수수량
+        - max_buy_amt (str(19)): 최대매수금액
+        - max_buy_qty (str(10)): 최대매수수량
+        - cma_evlu_amt (str(19)): CMA평가금액
+        - ovrs_re_use_amt_wcrc (str(19)): 해외재사용금액원화
+        - ord_psbl_frcr_amt_wcrc (str(19)): 주문가능외화금액원화
     
     Raises:
       Exception: 에러
@@ -1288,7 +1165,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-042',
     }
     params = {
       'CANO': in_CANO,
@@ -1304,7 +1180,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -1319,18 +1195,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_ord_psbl_cash'] = out_data['ord_psbl_cash']
-    return_data['out_ord_psbl_sbst'] = out_data['ord_psbl_sbst']
-    return_data['out_ruse_psbl_amt'] = out_data['ruse_psbl_amt']
-    return_data['out_fund_rpch_chgs'] = out_data['fund_rpch_chgs']
-    return_data['out_psbl_qty_calc_unpr'] = out_data['psbl_qty_calc_unpr']
-    return_data['out_nrcvb_buy_amt'] = out_data['nrcvb_buy_amt']
-    return_data['out_nrcvb_buy_qty'] = out_data['nrcvb_buy_qty']
-    return_data['out_max_buy_amt'] = out_data['max_buy_amt']
-    return_data['out_max_buy_qty'] = out_data['max_buy_qty']
-    return_data['out_cma_evlu_amt'] = out_data['cma_evlu_amt']
-    return_data['out_ovrs_re_use_amt_wcrc'] = out_data['ovrs_re_use_amt_wcrc']
-    return_data['out_ord_psbl_frcr_amt_wcrc'] = out_data['ord_psbl_frcr_amt_wcrc']
     
     return return_data
 
@@ -1393,8 +1257,8 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부. 0 : 성공  0 이외의 값 : 실패
       out_msg_cd (str(8)): 응답코드
       out_msg (str(80)): 응답메세지
-      out_output (str): 응답상세. Array
-      out_rsvn_ord_seq (str(10)): 예약주문 순번
+      out_output (list): 응답상세. Array
+        - rsvn_ord_seq (str(10)): 예약주문 순번
     
     Raises:
       Exception: 에러
@@ -1417,7 +1281,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-017',
     }
     params = {
       'CANO': in_CANO,
@@ -1436,7 +1299,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'POST', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -1445,7 +1308,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg'] = out_data['msg']
     return_data['out_output'] = out_data['output']
-    return_data['out_rsvn_ord_seq'] = out_data['rsvn_ord_seq']
     
     return return_data
 
@@ -1490,8 +1352,8 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부. 0 : 성공  0 이외의 값 : 실패
       out_msg_cd (str(8)): 응답코드
       out_msg (str(80)): 응답메세지
-      out_output (str): 응답상세
-      out_nrml_prcs_yn (str(1)): 정상처리여부
+      out_output (list): 응답상세
+        - nrml_prcs_yn (str(1)): 정상처리여부
     
     Raises:
       Exception: 에러
@@ -1514,7 +1376,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-018,019',
     }
     params = {
       'CANO': in_CANO,
@@ -1536,7 +1397,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'POST', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -1545,7 +1406,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg'] = out_data['msg']
     return_data['out_output'] = out_data['output']
-    return_data['out_nrml_prcs_yn'] = out_data['nrml_prcs_yn']
     
     return return_data
 
@@ -1588,30 +1448,30 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부. 0 : 성공  0 이외의 값 : 실패
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output (str): 응답상세
-      out_rsvn_ord_seq (str(10)): 예약주문 순번
-      out_rsvn_ord_ord_dt (str(8)): 예약주문주문일자
-      out_rsvn_ord_rcit_dt (str(8)): 예약주문접수일자
-      out_pdno (str(12)): 상품번호
-      out_ord_dvsn_cd (str(2)): 주문구분코드
-      out_ord_rsvn_qty (str(10)): 주문예약수량
-      out_tot_ccld_qty (str(10)): 총체결수량
-      out_cncl_ord_dt (str(8)): 취소주문일자
-      out_ord_tmd (str(6)): 주문시각
-      out_ctac_tlno (str(20)): 연락전화번호
-      out_rjct_rson2 (str(200)): 거부사유2
-      out_odno (str(10)): 주문번호
-      out_rsvn_ord_rcit_tmd (str(6)): 예약주문접수시각
-      out_kor_item_shtn_name (str(60)): 한글종목단축명
-      out_sll_buy_dvsn_cd (str(2)): 매도매수구분코드
-      out_ord_rsvn_unpr (str(19)): 주문예약단가
-      out_tot_ccld_amt (str(19)): 총체결금액
-      out_loan_dt (str(8)): 대출일자
-      out_cncl_rcit_tmd (str(6)): 취소접수시각
-      out_prcs_rslt (str(60)): 처리결과
-      out_ord_dvsn_name (str(60)): 주문구분명
-      out_tmnl_mdia_kind_cd (str(2)): 단말매체종류코드
-      out_rsvn_end_dt (str(8)): 예약종료일자
+      out_output (list): 응답상세
+        - rsvn_ord_seq (str(10)): 예약주문 순번
+        - rsvn_ord_ord_dt (str(8)): 예약주문주문일자
+        - rsvn_ord_rcit_dt (str(8)): 예약주문접수일자
+        - pdno (str(12)): 상품번호
+        - ord_dvsn_cd (str(2)): 주문구분코드
+        - ord_rsvn_qty (str(10)): 주문예약수량
+        - tot_ccld_qty (str(10)): 총체결수량
+        - cncl_ord_dt (str(8)): 취소주문일자
+        - ord_tmd (str(6)): 주문시각
+        - ctac_tlno (str(20)): 연락전화번호
+        - rjct_rson2 (str(200)): 거부사유2
+        - odno (str(10)): 주문번호
+        - rsvn_ord_rcit_tmd (str(6)): 예약주문접수시각
+        - kor_item_shtn_name (str(60)): 한글종목단축명
+        - sll_buy_dvsn_cd (str(2)): 매도매수구분코드
+        - ord_rsvn_unpr (str(19)): 주문예약단가
+        - tot_ccld_amt (str(19)): 총체결금액
+        - loan_dt (str(8)): 대출일자
+        - cncl_rcit_tmd (str(6)): 취소접수시각
+        - prcs_rslt (str(60)): 처리결과
+        - ord_dvsn_name (str(60)): 주문구분명
+        - tmnl_mdia_kind_cd (str(2)): 단말매체종류코드
+        - rsvn_end_dt (str(8)): 예약종료일자
     
     Raises:
       Exception: 에러
@@ -1634,7 +1494,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-020',
     }
     params = {
       'RSVN_ORD_ORD_DT': in_RSVN_ORD_ORD_DT,
@@ -1654,7 +1513,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -1669,29 +1528,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_rsvn_ord_seq'] = out_data['rsvn_ord_seq']
-    return_data['out_rsvn_ord_ord_dt'] = out_data['rsvn_ord_ord_dt']
-    return_data['out_rsvn_ord_rcit_dt'] = out_data['rsvn_ord_rcit_dt']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_ord_dvsn_cd'] = out_data['ord_dvsn_cd']
-    return_data['out_ord_rsvn_qty'] = out_data['ord_rsvn_qty']
-    return_data['out_tot_ccld_qty'] = out_data['tot_ccld_qty']
-    return_data['out_cncl_ord_dt'] = out_data['cncl_ord_dt']
-    return_data['out_ord_tmd'] = out_data['ord_tmd']
-    return_data['out_ctac_tlno'] = out_data['ctac_tlno']
-    return_data['out_rjct_rson2'] = out_data['rjct_rson2']
-    return_data['out_odno'] = out_data['odno']
-    return_data['out_rsvn_ord_rcit_tmd'] = out_data['rsvn_ord_rcit_tmd']
-    return_data['out_kor_item_shtn_name'] = out_data['kor_item_shtn_name']
-    return_data['out_sll_buy_dvsn_cd'] = out_data['sll_buy_dvsn_cd']
-    return_data['out_ord_rsvn_unpr'] = out_data['ord_rsvn_unpr']
-    return_data['out_tot_ccld_amt'] = out_data['tot_ccld_amt']
-    return_data['out_loan_dt'] = out_data['loan_dt']
-    return_data['out_cncl_rcit_tmd'] = out_data['cncl_rcit_tmd']
-    return_data['out_prcs_rslt'] = out_data['prcs_rslt']
-    return_data['out_ord_dvsn_name'] = out_data['ord_dvsn_name']
-    return_data['out_tmnl_mdia_kind_cd'] = out_data['tmnl_mdia_kind_cd']
-    return_data['out_rsvn_end_dt'] = out_data['rsvn_end_dt']
     
     return return_data
 
@@ -1727,27 +1563,27 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output1 (str): 응답상세1. Array
-      out_cblc_dvsn (str(2)): 잔고구분
-      out_cblc_dvsn_name (str(60)): 잔고구분명
-      out_pdno (str(12)): 상품번호
-      out_prdt_name (str(60)): 상품명
-      out_hldg_qty (str(19)): 보유수량
-      out_slpsb_qty (str(10)): 매도가능수량
-      out_pchs_avg_pric (str(184)): 매입평균가격
-      out_evlu_pfls_amt (str(19)): 평가손익금액
-      out_evlu_pfls_rt (str(72)): 평가손익율
-      out_prpr (str(19)): 현재가
-      out_evlu_amt (str(19)): 평가금액
-      out_pchs_amt (str(19)): 매입금액
-      out_cblc_weit (str(238)): 잔고비중
-      out_output2 (str): 응답상세2. Array
-      out_pchs_amt_smtl_amt (str(19)): 매입금액합계금액
-      out_evlu_amt_smtl_amt (str(19)): 평가금액합계금액
-      out_evlu_pfls_smtl_amt (str(19)): 평가손익합계금액
-      out_trad_pfls_smtl (str(19)): 매매손익합계
-      out_thdt_tot_pfls_amt (str(19)): 당일총손익금액
-      out_pftrt (str(238)): 수익률
+      out_output1 (list): 응답상세1. Array
+        - cblc_dvsn (str(2)): 잔고구분
+        - cblc_dvsn_name (str(60)): 잔고구분명
+        - pdno (str(12)): 상품번호
+        - prdt_name (str(60)): 상품명
+        - hldg_qty (str(19)): 보유수량
+        - slpsb_qty (str(10)): 매도가능수량
+        - pchs_avg_pric (str(184)): 매입평균가격
+        - evlu_pfls_amt (str(19)): 평가손익금액
+        - evlu_pfls_rt (str(72)): 평가손익율
+        - prpr (str(19)): 현재가
+        - evlu_amt (str(19)): 평가금액
+        - pchs_amt (str(19)): 매입금액
+        - cblc_weit (str(238)): 잔고비중
+        - output2 (list): 응답상세2. Array
+        - pchs_amt_smtl_amt (str(19)): 매입금액합계금액
+        - evlu_amt_smtl_amt (str(19)): 평가금액합계금액
+        - evlu_pfls_smtl_amt (str(19)): 평가손익합계금액
+        - trad_pfls_smtl (str(19)): 매매손익합계
+        - thdt_tot_pfls_amt (str(19)): 당일총손익금액
+        - pftrt (str(238)): 수익률
     
     Raises:
       Exception: 에러
@@ -1770,9 +1606,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-032',
     }
     params = {
+      'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'USER_DVSN_CD': in_USER_DVSN_CD,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
@@ -1782,7 +1618,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -1797,26 +1633,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output1'] = out_data['output1']
-    return_data['out_cblc_dvsn'] = out_data['cblc_dvsn']
-    return_data['out_cblc_dvsn_name'] = out_data['cblc_dvsn_name']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_prdt_name'] = out_data['prdt_name']
-    return_data['out_hldg_qty'] = out_data['hldg_qty']
-    return_data['out_slpsb_qty'] = out_data['slpsb_qty']
-    return_data['out_pchs_avg_pric'] = out_data['pchs_avg_pric']
-    return_data['out_evlu_pfls_amt'] = out_data['evlu_pfls_amt']
-    return_data['out_evlu_pfls_rt'] = out_data['evlu_pfls_rt']
-    return_data['out_prpr'] = out_data['prpr']
-    return_data['out_evlu_amt'] = out_data['evlu_amt']
-    return_data['out_pchs_amt'] = out_data['pchs_amt']
-    return_data['out_cblc_weit'] = out_data['cblc_weit']
-    return_data['out_output2'] = out_data['output2']
-    return_data['out_pchs_amt_smtl_amt'] = out_data['pchs_amt_smtl_amt']
-    return_data['out_evlu_amt_smtl_amt'] = out_data['evlu_amt_smtl_amt']
-    return_data['out_evlu_pfls_smtl_amt'] = out_data['evlu_pfls_smtl_amt']
-    return_data['out_trad_pfls_smtl'] = out_data['trad_pfls_smtl']
-    return_data['out_thdt_tot_pfls_amt'] = out_data['thdt_tot_pfls_amt']
-    return_data['out_pftrt'] = out_data['pftrt']
     
     return return_data
 
@@ -1855,27 +1671,27 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output (str): 응답상세1. Array
-      out_ord_gno_brno (str(5)): 주문채번지점번호
-      out_sll_buy_dvsn_cd (str(2)): 매도매수구분코드
-      out_trad_dvsn_name (str(60)): 매매구분명
-      out_odno (str(10)): 주문번호
-      out_pdno (str(12)): 상품번호
-      out_prdt_name (str(60)): 상품명
-      out_ord_unpr (str(19)): 주문단가
-      out_ord_qty (str(10)): 주문수량
-      out_tot_ccld_qty (str(10)): 총체결수량
-      out_nccs_qty (str(10)): 미체결수량
-      out_ord_dvsn_cd (str(2)): 주문구분코드
-      out_ord_dvsn_name (str(60)): 주문구분명
-      out_orgn_odno (str(10)): 원주문번호
-      out_ord_tmd (str(6)): 주문시각
-      out_objt_cust_dvsn_name (str(10)): 대상고객구분명
-      out_pchs_avg_pric (str(184)): 매입평균가격
-      out_stpm_cndt_pric (str(9)): 스톱지정가조건가격. 신규 API용 필드
-      out_stpm_efct_occr_dtmd (str(9)): 스톱지정가효력발생상세시각. 신규 API용 필드
-      out_stpm_efct_occr_yn (str(1)): 스톱지정가효력발생여부. 신규 API용 필드
-      out_excg_id_dvsn_cd (str(3)): 거래소ID구분코드. 신규 API용 필드
+      out_output (list): 응답상세1. Array
+        - ord_gno_brno (str(5)): 주문채번지점번호
+        - sll_buy_dvsn_cd (str(2)): 매도매수구분코드
+        - trad_dvsn_name (str(60)): 매매구분명
+        - odno (str(10)): 주문번호
+        - pdno (str(12)): 상품번호
+        - prdt_name (str(60)): 상품명
+        - ord_unpr (str(19)): 주문단가
+        - ord_qty (str(10)): 주문수량
+        - tot_ccld_qty (str(10)): 총체결수량
+        - nccs_qty (str(10)): 미체결수량
+        - ord_dvsn_cd (str(2)): 주문구분코드
+        - ord_dvsn_name (str(60)): 주문구분명
+        - orgn_odno (str(10)): 원주문번호
+        - ord_tmd (str(6)): 주문시각
+        - objt_cust_dvsn_name (str(10)): 대상고객구분명
+        - pchs_avg_pric (str(184)): 매입평균가격
+        - stpm_cndt_pric (str(9)): 스톱지정가조건가격. 신규 API용 필드
+        - stpm_efct_occr_dtmd (str(9)): 스톱지정가효력발생상세시각. 신규 API용 필드
+        - stpm_efct_occr_yn (str(1)): 스톱지정가효력발생여부. 신규 API용 필드
+        - excg_id_dvsn_cd (str(3)): 거래소ID구분코드. 신규 API용 필드
     
     Raises:
       Exception: 에러
@@ -1898,7 +1714,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-033',
     }
     params = {
       'CANO': in_CANO,
@@ -1914,7 +1729,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -1929,26 +1744,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_ord_gno_brno'] = out_data['ord_gno_brno']
-    return_data['out_sll_buy_dvsn_cd'] = out_data['sll_buy_dvsn_cd']
-    return_data['out_trad_dvsn_name'] = out_data['trad_dvsn_name']
-    return_data['out_odno'] = out_data['odno']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_prdt_name'] = out_data['prdt_name']
-    return_data['out_ord_unpr'] = out_data['ord_unpr']
-    return_data['out_ord_qty'] = out_data['ord_qty']
-    return_data['out_tot_ccld_qty'] = out_data['tot_ccld_qty']
-    return_data['out_nccs_qty'] = out_data['nccs_qty']
-    return_data['out_ord_dvsn_cd'] = out_data['ord_dvsn_cd']
-    return_data['out_ord_dvsn_name'] = out_data['ord_dvsn_name']
-    return_data['out_orgn_odno'] = out_data['orgn_odno']
-    return_data['out_ord_tmd'] = out_data['ord_tmd']
-    return_data['out_objt_cust_dvsn_name'] = out_data['objt_cust_dvsn_name']
-    return_data['out_pchs_avg_pric'] = out_data['pchs_avg_pric']
-    return_data['out_stpm_cndt_pric'] = out_data['stpm_cndt_pric']
-    return_data['out_stpm_efct_occr_dtmd'] = out_data['stpm_efct_occr_dtmd']
-    return_data['out_stpm_efct_occr_yn'] = out_data['stpm_efct_occr_yn']
-    return_data['out_excg_id_dvsn_cd'] = out_data['excg_id_dvsn_cd']
     
     return return_data
 
@@ -1987,11 +1782,11 @@ class KoreaInvestmentAPI():
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
       out_output (str): 응답상세1
-      out_ord_psbl_cash (str(19)): 주문가능현금
-      out_ruse_psbl_amt (str(19)): 재사용가능금액
-      out_psbl_qty_calc_unpr (str(19)): 가능수량계산단가
-      out_max_buy_amt (str(19)): 최대매수금액
-      out_max_buy_qty (str(10)): 최대매수수량
+        - ord_psbl_cash (str(19)): 주문가능현금
+        - ruse_psbl_amt (str(19)): 재사용가능금액
+        - psbl_qty_calc_unpr (str(19)): 가능수량계산단가
+        - max_buy_amt (str(19)): 최대매수금액
+        - max_buy_qty (str(10)): 최대매수수량
     
     Raises:
       Exception: 에러
@@ -2014,7 +1809,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-034',
     }
     params = {
       'CANO': in_CANO,
@@ -2029,7 +1823,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -2044,11 +1838,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_ord_psbl_cash'] = out_data['ord_psbl_cash']
-    return_data['out_ruse_psbl_amt'] = out_data['ruse_psbl_amt']
-    return_data['out_psbl_qty_calc_unpr'] = out_data['psbl_qty_calc_unpr']
-    return_data['out_max_buy_amt'] = out_data['max_buy_amt']
-    return_data['out_max_buy_qty'] = out_data['max_buy_qty']
     
     return return_data
 
@@ -2083,10 +1872,10 @@ class KoreaInvestmentAPI():
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
       out_output (str): 응답상세1
-      out_dnca_tota (str(19)): 예수금총액
-      out_nxdy_excc_amt (str(19)): 익일정산액
-      out_nxdy_sttl_amt (str(19)): 익일결제금액
-      out_nx2_day_sttl_amt (str(19)): 2익일결제금액
+        - dnca_tota (str(19)): 예수금총액
+        - nxdy_excc_amt (str(19)): 익일정산액
+        - nxdy_sttl_amt (str(19)): 익일결제금액
+        - nx2_day_sttl_amt (str(19)): 2익일결제금액
     
     Raises:
       Exception: 에러
@@ -2109,7 +1898,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-035',
     }
     params = {
       'CANO': in_CANO,
@@ -2120,7 +1908,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -2135,10 +1923,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_dnca_tota'] = out_data['dnca_tota']
-    return_data['out_nxdy_excc_amt'] = out_data['nxdy_excc_amt']
-    return_data['out_nxdy_sttl_amt'] = out_data['nxdy_sttl_amt']
-    return_data['out_nx2_day_sttl_amt'] = out_data['nx2_day_sttl_amt']
     
     return return_data
 
@@ -2176,30 +1960,30 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output1 (str): 응답상세. Array
-      out_cblc_dvsn_name (str(60)): 잔고구분명
-      out_prdt_name (str(60)): 상품명
-      out_pdno (str(12)): 상품번호
-      out_item_dvsn_name (str(60)): 종목구분명
-      out_thdt_buyqty (str(10)): 금일매수수량
-      out_thdt_sll_qty (str(10)): 금일매도수량
-      out_hldg_qty (str(19)): 보유수량
-      out_ord_psbl_qty (str(10)): 주문가능수량
-      out_pchs_avg_pric (str(184)): 매입평균가격
-      out_pchs_amt (str(19)): 매입금액
-      out_prpr (str(19)): 현재가
-      out_evlu_amt (str(19)): 평가금액
-      out_evlu_pfls_amt (str(19)): 평가손익금액
-      out_evlu_erng_rt (str(238)): 평가수익율
-      out_output2 (str): 응답상세2
-      out_dnca_tot_amt (str(19)): 예수금총금액
-      out_nxdy_excc_amt (str(19)): 익일정산금액
-      out_prvs_rcdl_excc_amt (str(19)): 가수도정산금액
-      out_thdt_buy_amt (str(19)): 금일매수금액
-      out_thdt_sll_amt (str(19)): 금일매도금액
-      out_thdt_tlex_amt (str(19)): 금일제비용금액
-      out_scts_evlu_amt (str(19)): 유가평가금액
-      out_tot_evlu_amt (str(19)): 총평가금액
+      out_output1 (list): 응답상세. Array
+        - cblc_dvsn_name (str(60)): 잔고구분명
+        - prdt_name (str(60)): 상품명
+        - pdno (str(12)): 상품번호
+        - item_dvsn_name (str(60)): 종목구분명
+        - thdt_buyqty (str(10)): 금일매수수량
+        - thdt_sll_qty (str(10)): 금일매도수량
+        - hldg_qty (str(19)): 보유수량
+        - ord_psbl_qty (str(10)): 주문가능수량
+        - pchs_avg_pric (str(184)): 매입평균가격
+        - pchs_amt (str(19)): 매입금액
+        - prpr (str(19)): 현재가
+        - evlu_amt (str(19)): 평가금액
+        - evlu_pfls_amt (str(19)): 평가손익금액
+        - evlu_erng_rt (str(238)): 평가수익율
+        - output2 (str): 응답상세2
+        - dnca_tot_amt (str(19)): 예수금총금액
+        - nxdy_excc_amt (str(19)): 익일정산금액
+        - prvs_rcdl_excc_amt (str(19)): 가수도정산금액
+        - thdt_buy_amt (str(19)): 금일매수금액
+        - thdt_sll_amt (str(19)): 금일매도금액
+        - thdt_tlex_amt (str(19)): 금일제비용금액
+        - scts_evlu_amt (str(19)): 유가평가금액
+        - tot_evlu_amt (str(19)): 총평가금액
     
     Raises:
       Exception: 에러
@@ -2222,7 +2006,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-036',
     }
     params = {
       'CANO': in_CANO,
@@ -2236,7 +2019,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -2251,29 +2034,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output1'] = out_data['output1']
-    return_data['out_cblc_dvsn_name'] = out_data['cblc_dvsn_name']
-    return_data['out_prdt_name'] = out_data['prdt_name']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_item_dvsn_name'] = out_data['item_dvsn_name']
-    return_data['out_thdt_buyqty'] = out_data['thdt_buyqty']
-    return_data['out_thdt_sll_qty'] = out_data['thdt_sll_qty']
-    return_data['out_hldg_qty'] = out_data['hldg_qty']
-    return_data['out_ord_psbl_qty'] = out_data['ord_psbl_qty']
-    return_data['out_pchs_avg_pric'] = out_data['pchs_avg_pric']
-    return_data['out_pchs_amt'] = out_data['pchs_amt']
-    return_data['out_prpr'] = out_data['prpr']
-    return_data['out_evlu_amt'] = out_data['evlu_amt']
-    return_data['out_evlu_pfls_amt'] = out_data['evlu_pfls_amt']
-    return_data['out_evlu_erng_rt'] = out_data['evlu_erng_rt']
-    return_data['out_output2'] = out_data['output2']
-    return_data['out_dnca_tot_amt'] = out_data['dnca_tot_amt']
-    return_data['out_nxdy_excc_amt'] = out_data['nxdy_excc_amt']
-    return_data['out_prvs_rcdl_excc_amt'] = out_data['prvs_rcdl_excc_amt']
-    return_data['out_thdt_buy_amt'] = out_data['thdt_buy_amt']
-    return_data['out_thdt_sll_amt'] = out_data['thdt_sll_amt']
-    return_data['out_thdt_tlex_amt'] = out_data['thdt_tlex_amt']
-    return_data['out_scts_evlu_amt'] = out_data['scts_evlu_amt']
-    return_data['out_tot_evlu_amt'] = out_data['tot_evlu_amt']
     
     return return_data
 
@@ -2317,59 +2077,59 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output1 (str): 응답상세. Array
-      out_pdno (str(12)): 상품번호. 종목번호(뒷 6자리)
-      out_prdt_name (str(60)): 상품명. 종목명
-      out_trad_dvsn_name (str(60)): 매매구분명. 매수매도구분
-      out_bfdy_buy_qty (str(10)): 전일매수수량
-      out_bfdy_sll_qty (str(10)): 전일매도수량
-      out_thdt_buyqty (str(10)): 금일매수수량
-      out_thdt_sll_qty (str(10)): 금일매도수량
-      out_hldg_qty (str(19)): 보유수량
-      out_ord_psbl_qty (str(10)): 주문가능수량
-      out_pchs_avg_pric (str(23)): 매입평균가격. 매입금액 / 보유수량
-      out_pchs_amt (str(19)): 매입금액
-      out_prpr (str(19)): 현재가
-      out_evlu_amt (str(19)): 평가금액
-      out_evlu_pfls_amt (str(19)): 평가손익금액. 평가금액 - 매입금액
-      out_evlu_pfls_rt (str(10)): 평가손익율
-      out_evlu_erng_rt (str(32)): 평가수익율
-      out_loan_dt (str(8)): 대출일자
-      out_loan_amt (str(19)): 대출금액
-      out_stln_slng_chgs (str(19)): 대주매각대금. 신용 거래에서, 고객이 증권 회사로부터 대부받은 주식의 매각 대금
-      out_expd_dt (str(8)): 만기일자
-      out_stck_loan_unpr (str(23)): 주식대출단가
-      out_bfdy_cprs_icdc (str(19)): 전일대비증감
-      out_fltt_rt (str(32)): 등락율
-      out_output2 (str): 응답상세2. Array
-      out_dnca_tot_amt (str(19)): 예수금총금액
-      out_nxdy_excc_amt (str(19)): 익일정산금액
-      out_prvs_rcdl_excc_amt (str(19)): 가수도정산금액
-      out_cma_evlu_amt (str(19)): CMA평가금액
-      out_bfdy_buy_amt (str(19)): 전일매수금액
-      out_thdt_buy_amt (str(19)): 금일매수금액
-      out_nxdy_auto_rdpt_amt (str(19)): 익일자동상환금액
-      out_bfdy_sll_amt (str(19)): 전일매도금액
-      out_thdt_sll_amt (str(19)): 금일매도금액
-      out_d2_auto_rdpt_amt (str(19)): D+2자동상환금액
-      out_bfdy_tlex_amt (str(19)): 전일제비용금액
-      out_thdt_tlex_amt (str(19)): 금일제비용금액
-      out_tot_loan_amt (str(19)): 총대출금액
-      out_scts_evlu_amt (str(19)): 유가평가금액
-      out_tot_evlu_amt (str(19)): 총평가금액
-      out_nass_amt (str(19)): 순자산금액
-      out_fncg_gld_auto_rdpt_yn (str(1)): 융자금자동상환여부
-      out_pchs_amt_smtl_amt (str(19)): 매입금액합계금액
-      out_evlu_amt_smtl_amt (str(19)): 평가금액합계금액
-      out_evlu_pfls_smtl_amt (str(19)): 평가손익합계금액
-      out_tot_stln_slng_chgs (str(19)): 총대주매각대금
-      out_bfdy_tot_asst_evlu_amt (str(19)): 전일총자산평가금액
-      out_asst_icdc_amt (str(19)): 자산증감액
-      out_asst_icdc_erng_rt (str(32)): 자산증감수익율
-      out_rlzt_pfls (str(19)): 실현손익
-      out_rlzt_erng_rt (str(32)): 실현수익율
-      out_real_evlu_pfls (str(19)): 실평가손익
-      out_real_evlu_pfls_erng_rt (str(32)): 실평가손익수익율
+      out_output1 (list): 응답상세. Array
+        - pdno (str(12)): 상품번호. 종목번호(뒷 6자리)
+        - prdt_name (str(60)): 상품명. 종목명
+        - trad_dvsn_name (str(60)): 매매구분명. 매수매도구분
+        - bfdy_buy_qty (str(10)): 전일매수수량
+        - bfdy_sll_qty (str(10)): 전일매도수량
+        - thdt_buyqty (str(10)): 금일매수수량
+        - thdt_sll_qty (str(10)): 금일매도수량
+        - hldg_qty (str(19)): 보유수량
+        - ord_psbl_qty (str(10)): 주문가능수량
+        - pchs_avg_pric (str(23)): 매입평균가격. 매입금액 / 보유수량
+        - pchs_amt (str(19)): 매입금액
+        - prpr (str(19)): 현재가
+        - evlu_amt (str(19)): 평가금액
+        - evlu_pfls_amt (str(19)): 평가손익금액. 평가금액 - 매입금액
+        - evlu_pfls_rt (str(10)): 평가손익율
+        - evlu_erng_rt (str(32)): 평가수익율
+        - loan_dt (str(8)): 대출일자
+        - loan_amt (str(19)): 대출금액
+        - stln_slng_chgs (str(19)): 대주매각대금. 신용 거래에서, 고객이 증권 회사로부터 대부받은 주식의 매각 대금
+        - expd_dt (str(8)): 만기일자
+        - stck_loan_unpr (str(23)): 주식대출단가
+        - bfdy_cprs_icdc (str(19)): 전일대비증감
+        - fltt_rt (str(32)): 등락율
+        - output2 (list): 응답상세2. Array
+        - dnca_tot_amt (str(19)): 예수금총금액
+        - nxdy_excc_amt (str(19)): 익일정산금액
+        - prvs_rcdl_excc_amt (str(19)): 가수도정산금액
+        - cma_evlu_amt (str(19)): CMA평가금액
+        - bfdy_buy_amt (str(19)): 전일매수금액
+        - thdt_buy_amt (str(19)): 금일매수금액
+        - nxdy_auto_rdpt_amt (str(19)): 익일자동상환금액
+        - bfdy_sll_amt (str(19)): 전일매도금액
+        - thdt_sll_amt (str(19)): 금일매도금액
+        - d2_auto_rdpt_amt (str(19)): D+2자동상환금액
+        - bfdy_tlex_amt (str(19)): 전일제비용금액
+        - thdt_tlex_amt (str(19)): 금일제비용금액
+        - tot_loan_amt (str(19)): 총대출금액
+        - scts_evlu_amt (str(19)): 유가평가금액
+        - tot_evlu_amt (str(19)): 총평가금액
+        - nass_amt (str(19)): 순자산금액
+        - fncg_gld_auto_rdpt_yn (str(1)): 융자금자동상환여부
+        - pchs_amt_smtl_amt (str(19)): 매입금액합계금액
+        - evlu_amt_smtl_amt (str(19)): 평가금액합계금액
+        - evlu_pfls_smtl_amt (str(19)): 평가손익합계금액
+        - tot_stln_slng_chgs (str(19)): 총대주매각대금
+        - bfdy_tot_asst_evlu_amt (str(19)): 전일총자산평가금액
+        - asst_icdc_amt (str(19)): 자산증감액
+        - asst_icdc_erng_rt (str(32)): 자산증감수익율
+        - rlzt_pfls (str(19)): 실현손익
+        - rlzt_erng_rt (str(32)): 실현수익율
+        - real_evlu_pfls (str(19)): 실평가손익
+        - real_evlu_pfls_erng_rt (str(32)): 실평가손익수익율
     
     Raises:
       Exception: 에러
@@ -2392,7 +2152,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-041',
     }
     params = {
       'CANO': in_CANO,
@@ -2412,7 +2171,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -2427,58 +2186,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output1'] = out_data['output1']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_prdt_name'] = out_data['prdt_name']
-    return_data['out_trad_dvsn_name'] = out_data['trad_dvsn_name']
-    return_data['out_bfdy_buy_qty'] = out_data['bfdy_buy_qty']
-    return_data['out_bfdy_sll_qty'] = out_data['bfdy_sll_qty']
-    return_data['out_thdt_buyqty'] = out_data['thdt_buyqty']
-    return_data['out_thdt_sll_qty'] = out_data['thdt_sll_qty']
-    return_data['out_hldg_qty'] = out_data['hldg_qty']
-    return_data['out_ord_psbl_qty'] = out_data['ord_psbl_qty']
-    return_data['out_pchs_avg_pric'] = out_data['pchs_avg_pric']
-    return_data['out_pchs_amt'] = out_data['pchs_amt']
-    return_data['out_prpr'] = out_data['prpr']
-    return_data['out_evlu_amt'] = out_data['evlu_amt']
-    return_data['out_evlu_pfls_amt'] = out_data['evlu_pfls_amt']
-    return_data['out_evlu_pfls_rt'] = out_data['evlu_pfls_rt']
-    return_data['out_evlu_erng_rt'] = out_data['evlu_erng_rt']
-    return_data['out_loan_dt'] = out_data['loan_dt']
-    return_data['out_loan_amt'] = out_data['loan_amt']
-    return_data['out_stln_slng_chgs'] = out_data['stln_slng_chgs']
-    return_data['out_expd_dt'] = out_data['expd_dt']
-    return_data['out_stck_loan_unpr'] = out_data['stck_loan_unpr']
-    return_data['out_bfdy_cprs_icdc'] = out_data['bfdy_cprs_icdc']
-    return_data['out_fltt_rt'] = out_data['fltt_rt']
-    return_data['out_output2'] = out_data['output2']
-    return_data['out_dnca_tot_amt'] = out_data['dnca_tot_amt']
-    return_data['out_nxdy_excc_amt'] = out_data['nxdy_excc_amt']
-    return_data['out_prvs_rcdl_excc_amt'] = out_data['prvs_rcdl_excc_amt']
-    return_data['out_cma_evlu_amt'] = out_data['cma_evlu_amt']
-    return_data['out_bfdy_buy_amt'] = out_data['bfdy_buy_amt']
-    return_data['out_thdt_buy_amt'] = out_data['thdt_buy_amt']
-    return_data['out_nxdy_auto_rdpt_amt'] = out_data['nxdy_auto_rdpt_amt']
-    return_data['out_bfdy_sll_amt'] = out_data['bfdy_sll_amt']
-    return_data['out_thdt_sll_amt'] = out_data['thdt_sll_amt']
-    return_data['out_d2_auto_rdpt_amt'] = out_data['d2_auto_rdpt_amt']
-    return_data['out_bfdy_tlex_amt'] = out_data['bfdy_tlex_amt']
-    return_data['out_thdt_tlex_amt'] = out_data['thdt_tlex_amt']
-    return_data['out_tot_loan_amt'] = out_data['tot_loan_amt']
-    return_data['out_scts_evlu_amt'] = out_data['scts_evlu_amt']
-    return_data['out_tot_evlu_amt'] = out_data['tot_evlu_amt']
-    return_data['out_nass_amt'] = out_data['nass_amt']
-    return_data['out_fncg_gld_auto_rdpt_yn'] = out_data['fncg_gld_auto_rdpt_yn']
-    return_data['out_pchs_amt_smtl_amt'] = out_data['pchs_amt_smtl_amt']
-    return_data['out_evlu_amt_smtl_amt'] = out_data['evlu_amt_smtl_amt']
-    return_data['out_evlu_pfls_smtl_amt'] = out_data['evlu_pfls_smtl_amt']
-    return_data['out_tot_stln_slng_chgs'] = out_data['tot_stln_slng_chgs']
-    return_data['out_bfdy_tot_asst_evlu_amt'] = out_data['bfdy_tot_asst_evlu_amt']
-    return_data['out_asst_icdc_amt'] = out_data['asst_icdc_amt']
-    return_data['out_asst_icdc_erng_rt'] = out_data['asst_icdc_erng_rt']
-    return_data['out_rlzt_pfls'] = out_data['rlzt_pfls']
-    return_data['out_rlzt_erng_rt'] = out_data['rlzt_erng_rt']
-    return_data['out_real_evlu_pfls'] = out_data['real_evlu_pfls']
-    return_data['out_real_evlu_pfls_erng_rt'] = out_data['real_evlu_pfls_erng_rt']
     
     return return_data
 
@@ -2513,7 +2220,7 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_Output1 (str): 응답상세. Array [아래 순서대로 출력 : 20항목] 1: 주식 2: 펀드/MMW 3: IMA 4: 채권 5: ELS/DLS 6: WRAP 7: 신탁 8: RP/발행어음 9: 해외주식 10: 해외채권 11: 금현물 12: CD/CP 13: 전자단기사채 14: 타사상품 15: 외화전자단기사채 16: 외화 ELS/DLS 17: 외화 18: 예수금 19: 청약자예수금 20: 합계  [21번 계좌일 경우 : 17항목] 1: 수익증권 2: IMA 3: 채권 4: ELS/DLS 5: WRAP 6: 신탁 7: RP 8: 외화rp 9: 해외채권 10: CD/CP 11: 전자단기사채 12: 외화전자단기사채 13: 외화ELS/DLS 14: 외화평가금액 15: 예수금+cma 16: 청약자예수금 17: 합계
+      out_Output1 (list): 응답상세. Array [아래 순서대로 출력 : 20항목] 1: 주식 2: 펀드/MMW 3: IMA 4: 채권 5: ELS/DLS 6: WRAP 7: 신탁 8: RP/발행어음 9: 해외주식 10: 해외채권 11: 금현물 12: CD/CP 13: 전자단기사채 14: 타사상품 15: 외화전자단기사채 16: 외화 ELS/DLS 17: 외화 18: 예수금 19: 청약자예수금 20: 합계  [21번 계좌일 경우 : 17항목] 1: 수익증권 2: IMA 3: 채권 4: ELS/DLS 5: WRAP 6: 신탁 7: RP 8: 외화rp 9: 해외채권 10: CD/CP 11: 전자단기사채 12: 외화전자단기사채 13: 외화ELS/DLS 14: 외화평가금액 15: 예수금+cma 16: 청약자예수금 17: 합계
       out_pchs_amt (str(19)): 매입금액
       out_evlu_amt (str(19)): 평가금액
       out_evlu_pfls_amt (str(19)): 평가손익금액
@@ -2568,7 +2275,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-048',
     }
     params = {
       'CANO': in_CANO,
@@ -2580,7 +2286,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -2667,35 +2373,35 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output1 (str): 응답상세. array
-      out_trad_dt (str(8)): 매매일자
-      out_buy_amt (str(19)): 매수금액
-      out_sll_amt (str(19)): 매도금액
-      out_rlzt_pfls (str(19)): 실현손익
-      out_fee (str(19)): 수수료
-      out_loan_int (str(19)): 대출이자
-      out_tl_tax (str(19)): 제세금
-      out_pfls_rt (str(238)): 손익률
-      out_sll_qty1 (str(19)): 매도수량1
-      out_buy_qty1 (str(9)): 매수수량1
-      out_output2 (str): 응답상세2
-      out_sll_qty_smtl (str(19)): 매도수량합계
-      out_sll_tr_amt_smtl (str(19)): 매도거래금액합계
-      out_sll_fee_smtl (str(19)): 매도수수료합계
-      out_sll_tltx_smtl (str(19)): 매도제세금합계
-      out_sll_excc_amt_smtl (str(19)): 매도정산금액합계
-      out_buy_qty_smtl (str(19)): 매수수량합계
-      out_buy_tr_amt_smtl (str(19)): 매수거래금액합계
-      out_buy_fee_smtl (str(19)): 매수수수료합계
-      out_buy_tax_smtl (str(19)): 매수제세금합계
-      out_buy_excc_amt_smtl (str(19)): 매수정산금액합계
-      out_tot_qty (str(10)): 총수량
-      out_tot_tr_amt (str(19)): 총거래금액
-      out_tot_fee (str(19)): 총수수료
-      out_tot_tltx (str(19)): 총제세금
-      out_tot_excc_amt (str(19)): 총정산금액
-      out_tot_rlzt_pfls (str(19)): 총실현손익. ※ HTS[0856] 기간별 매매손익 '일별' 화면의 우측 하단 '총손익률' 항목은  기간별매매손익현황조회(TTTC8715R) > output2 > tot_pftrt(총수익률) 으로 확인 가능
-      out_loan_int (str(19)): 대출이자
+      out_output1 (list): 응답상세. array
+        - trad_dt (str(8)): 매매일자
+        - buy_amt (str(19)): 매수금액
+        - sll_amt (str(19)): 매도금액
+        - rlzt_pfls (str(19)): 실현손익
+        - fee (str(19)): 수수료
+        - loan_int (str(19)): 대출이자
+        - tl_tax (str(19)): 제세금
+        - pfls_rt (str(238)): 손익률
+        - sll_qty1 (str(19)): 매도수량1
+        - buy_qty1 (str(9)): 매수수량1
+        - output2 (str): 응답상세2
+        - sll_qty_smtl (str(19)): 매도수량합계
+        - sll_tr_amt_smtl (str(19)): 매도거래금액합계
+        - sll_fee_smtl (str(19)): 매도수수료합계
+        - sll_tltx_smtl (str(19)): 매도제세금합계
+        - sll_excc_amt_smtl (str(19)): 매도정산금액합계
+        - buy_qty_smtl (str(19)): 매수수량합계
+        - buy_tr_amt_smtl (str(19)): 매수거래금액합계
+        - buy_fee_smtl (str(19)): 매수수수료합계
+        - buy_tax_smtl (str(19)): 매수제세금합계
+        - buy_excc_amt_smtl (str(19)): 매수정산금액합계
+        - tot_qty (str(10)): 총수량
+        - tot_tr_amt (str(19)): 총거래금액
+        - tot_fee (str(19)): 총수수료
+        - tot_tltx (str(19)): 총제세금
+        - tot_excc_amt (str(19)): 총정산금액
+        - tot_rlzt_pfls (str(19)): 총실현손익. ※ HTS[0856] 기간별 매매손익 '일별' 화면의 우측 하단 '총손익률' 항목은  기간별매매손익현황조회(TTTC8715R) > output2 > tot_pftrt(총수익률) 으로 확인 가능
+        - loan_int (str(19)): 대출이자
     
     Raises:
       Exception: 에러
@@ -2718,7 +2424,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-052',
     }
     params = {
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
@@ -2736,7 +2441,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -2751,34 +2456,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output1'] = out_data['output1']
-    return_data['out_trad_dt'] = out_data['trad_dt']
-    return_data['out_buy_amt'] = out_data['buy_amt']
-    return_data['out_sll_amt'] = out_data['sll_amt']
-    return_data['out_rlzt_pfls'] = out_data['rlzt_pfls']
-    return_data['out_fee'] = out_data['fee']
-    return_data['out_loan_int'] = out_data['loan_int']
-    return_data['out_tl_tax'] = out_data['tl_tax']
-    return_data['out_pfls_rt'] = out_data['pfls_rt']
-    return_data['out_sll_qty1'] = out_data['sll_qty1']
-    return_data['out_buy_qty1'] = out_data['buy_qty1']
-    return_data['out_output2'] = out_data['output2']
-    return_data['out_sll_qty_smtl'] = out_data['sll_qty_smtl']
-    return_data['out_sll_tr_amt_smtl'] = out_data['sll_tr_amt_smtl']
-    return_data['out_sll_fee_smtl'] = out_data['sll_fee_smtl']
-    return_data['out_sll_tltx_smtl'] = out_data['sll_tltx_smtl']
-    return_data['out_sll_excc_amt_smtl'] = out_data['sll_excc_amt_smtl']
-    return_data['out_buy_qty_smtl'] = out_data['buy_qty_smtl']
-    return_data['out_buy_tr_amt_smtl'] = out_data['buy_tr_amt_smtl']
-    return_data['out_buy_fee_smtl'] = out_data['buy_fee_smtl']
-    return_data['out_buy_tax_smtl'] = out_data['buy_tax_smtl']
-    return_data['out_buy_excc_amt_smtl'] = out_data['buy_excc_amt_smtl']
-    return_data['out_tot_qty'] = out_data['tot_qty']
-    return_data['out_tot_tr_amt'] = out_data['tot_tr_amt']
-    return_data['out_tot_fee'] = out_data['tot_fee']
-    return_data['out_tot_tltx'] = out_data['tot_tltx']
-    return_data['out_tot_excc_amt'] = out_data['tot_excc_amt']
-    return_data['out_tot_rlzt_pfls'] = out_data['tot_rlzt_pfls']
-    return_data['out_loan_int'] = out_data['loan_int']
     
     return return_data
 
@@ -2820,43 +2497,43 @@ class KoreaInvestmentAPI():
       out_msg1 (str(80)): 응답메세지
       out_ctx_area_nk100 (str(100)): 연속조회키100
       out_ctx_area_fk100 (str(100)): 연속조회검색조건100
-      out_output1 (str): 응답상세. array
-      out_trad_dt (str(8)): 매매일자
-      out_pdno (str(12)): 상품번호. 종목번호(뒤 6자리만 해당)
-      out_prdt_name (str(60)): 상품명
-      out_trad_dvsn_name (str(60)): 매매구분명
-      out_loan_dt (str(8)): 대출일자
-      out_hldg_qty (str(19)): 보유수량
-      out_pchs_unpr (str(19)): 매입단가
-      out_buy_qty (str(10)): 매수수량
-      out_buy_amt (str(19)): 매수금액
-      out_sll_pric (str(10)): 매도가격
-      out_sll_qty (str(10)): 매도수량
-      out_sll_amt (str(19)): 매도금액
-      out_rlzt_pfls (str(19)): 실현손익
-      out_pfls_rt (str(238)): 손익률
-      out_fee (str(19)): 수수료
-      out_tl_tax (str(19)): 제세금
-      out_loan_int (str(19)): 대출이자
-      out_output2 (str): 응답상세2
-      out_sll_qty_smtl (str(19)): 매도수량합계
-      out_sll_tr_amt_smtl (str(19)): 매도거래금액합계
-      out_sll_fee_smtl (str(19)): 매도수수료합계
-      out_sll_tltx_smtl (str(19)): 매도제세금합계
-      out_sll_excc_amt_smtl (str(19)): 매도정산금액합계
-      out_buyqty_smtl (str(8)): 매수수량합계
-      out_buy_tr_amt_smtl (str(19)): 매수거래금액합계
-      out_buy_fee_smtl (str(19)): 매수수수료합계
-      out_buy_tax_smtl (str(19)): 매수제세금합계
-      out_buy_excc_amt_smtl (str(19)): 매수정산금액합계
-      out_tot_qty (str(10)): 총수량
-      out_tot_tr_amt (str(19)): 총거래금액
-      out_tot_fee (str(19)): 총수수료
-      out_tot_tltx (str(19)): 총제세금
-      out_tot_excc_amt (str(19)): 총정산금액
-      out_tot_rlzt_pfls (str(19)): 총실현손익
-      out_loan_int (str(19)): 대출이자
-      out_tot_pftrt (str(238)): 총수익률
+      out_output1 (list): 응답상세. array
+        - trad_dt (str(8)): 매매일자
+        - pdno (str(12)): 상품번호. 종목번호(뒤 6자리만 해당)
+        - prdt_name (str(60)): 상품명
+        - trad_dvsn_name (str(60)): 매매구분명
+        - loan_dt (str(8)): 대출일자
+        - hldg_qty (str(19)): 보유수량
+        - pchs_unpr (str(19)): 매입단가
+        - buy_qty (str(10)): 매수수량
+        - buy_amt (str(19)): 매수금액
+        - sll_pric (str(10)): 매도가격
+        - sll_qty (str(10)): 매도수량
+        - sll_amt (str(19)): 매도금액
+        - rlzt_pfls (str(19)): 실현손익
+        - pfls_rt (str(238)): 손익률
+        - fee (str(19)): 수수료
+        - tl_tax (str(19)): 제세금
+        - loan_int (str(19)): 대출이자
+        - output2 (str): 응답상세2
+        - sll_qty_smtl (str(19)): 매도수량합계
+        - sll_tr_amt_smtl (str(19)): 매도거래금액합계
+        - sll_fee_smtl (str(19)): 매도수수료합계
+        - sll_tltx_smtl (str(19)): 매도제세금합계
+        - sll_excc_amt_smtl (str(19)): 매도정산금액합계
+        - buyqty_smtl (str(8)): 매수수량합계
+        - buy_tr_amt_smtl (str(19)): 매수거래금액합계
+        - buy_fee_smtl (str(19)): 매수수수료합계
+        - buy_tax_smtl (str(19)): 매수제세금합계
+        - buy_excc_amt_smtl (str(19)): 매수정산금액합계
+        - tot_qty (str(10)): 총수량
+        - tot_tr_amt (str(19)): 총거래금액
+        - tot_fee (str(19)): 총수수료
+        - tot_tltx (str(19)): 총제세금
+        - tot_excc_amt (str(19)): 총정산금액
+        - tot_rlzt_pfls (str(19)): 총실현손익
+        - loan_int (str(19)): 대출이자
+        - tot_pftrt (str(238)): 총수익률
     
     Raises:
       Exception: 에러
@@ -2879,7 +2556,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': 'v1_국내주식-060',
     }
     params = {
       'CANO': in_CANO,
@@ -2896,7 +2572,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -2913,42 +2589,6 @@ class KoreaInvestmentAPI():
     return_data['out_ctx_area_nk100'] = out_data['ctx_area_nk100']
     return_data['out_ctx_area_fk100'] = out_data['ctx_area_fk100']
     return_data['out_output1'] = out_data['output1']
-    return_data['out_trad_dt'] = out_data['trad_dt']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_prdt_name'] = out_data['prdt_name']
-    return_data['out_trad_dvsn_name'] = out_data['trad_dvsn_name']
-    return_data['out_loan_dt'] = out_data['loan_dt']
-    return_data['out_hldg_qty'] = out_data['hldg_qty']
-    return_data['out_pchs_unpr'] = out_data['pchs_unpr']
-    return_data['out_buy_qty'] = out_data['buy_qty']
-    return_data['out_buy_amt'] = out_data['buy_amt']
-    return_data['out_sll_pric'] = out_data['sll_pric']
-    return_data['out_sll_qty'] = out_data['sll_qty']
-    return_data['out_sll_amt'] = out_data['sll_amt']
-    return_data['out_rlzt_pfls'] = out_data['rlzt_pfls']
-    return_data['out_pfls_rt'] = out_data['pfls_rt']
-    return_data['out_fee'] = out_data['fee']
-    return_data['out_tl_tax'] = out_data['tl_tax']
-    return_data['out_loan_int'] = out_data['loan_int']
-    return_data['out_output2'] = out_data['output2']
-    return_data['out_sll_qty_smtl'] = out_data['sll_qty_smtl']
-    return_data['out_sll_tr_amt_smtl'] = out_data['sll_tr_amt_smtl']
-    return_data['out_sll_fee_smtl'] = out_data['sll_fee_smtl']
-    return_data['out_sll_tltx_smtl'] = out_data['sll_tltx_smtl']
-    return_data['out_sll_excc_amt_smtl'] = out_data['sll_excc_amt_smtl']
-    return_data['out_buyqty_smtl'] = out_data['buyqty_smtl']
-    return_data['out_buy_tr_amt_smtl'] = out_data['buy_tr_amt_smtl']
-    return_data['out_buy_fee_smtl'] = out_data['buy_fee_smtl']
-    return_data['out_buy_tax_smtl'] = out_data['buy_tax_smtl']
-    return_data['out_buy_excc_amt_smtl'] = out_data['buy_excc_amt_smtl']
-    return_data['out_tot_qty'] = out_data['tot_qty']
-    return_data['out_tot_tr_amt'] = out_data['tot_tr_amt']
-    return_data['out_tot_fee'] = out_data['tot_fee']
-    return_data['out_tot_tltx'] = out_data['tot_tltx']
-    return_data['out_tot_excc_amt'] = out_data['tot_excc_amt']
-    return_data['out_tot_rlzt_pfls'] = out_data['tot_rlzt_pfls']
-    return_data['out_loan_int'] = out_data['loan_int']
-    return_data['out_tot_pftrt'] = out_data['tot_pftrt']
     
     return return_data
 
@@ -2987,110 +2627,110 @@ class KoreaInvestmentAPI():
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
       out_output (str): 응답상세
-      out_acmga_rt (str(114)): 계좌증거금율
-      out_acmga_pct100_aptm_rson (str(100)): 계좌증거금100퍼센트지정사유
-      out_stck_cash_objt_amt (str(184)): 주식현금대상금액
-      out_stck_sbst_objt_amt (str(184)): 주식대용대상금액
-      out_stck_evlu_objt_amt (str(184)): 주식평가대상금액
-      out_stck_ruse_psbl_objt_amt (str(184)): 주식재사용가능대상금액
-      out_stck_fund_rpch_chgs_objt_amt (str(184)): 주식펀드환매대금대상금액
-      out_stck_fncg_rdpt_objt_atm (str(184)): 주식융자상환금대상금액
-      out_bond_ruse_psbl_objt_amt (str(184)): 채권재사용가능대상금액
-      out_stck_cash_use_amt (str(184)): 주식현금사용금액
-      out_stck_sbst_use_amt (str(184)): 주식대용사용금액
-      out_stck_evlu_use_amt (str(184)): 주식평가사용금액
-      out_stck_ruse_psbl_amt_use_amt (str(184)): 주식재사용가능금사용금액
-      out_stck_fund_rpch_chgs_use_amt (str(184)): 주식펀드환매대금사용금액
-      out_stck_fncg_rdpt_amt_use_amt (str(184)): 주식융자상환금사용금액
-      out_bond_ruse_psbl_amt_use_amt (str(184)): 채권재사용가능금사용금액
-      out_stck_cash_ord_psbl_amt (str(184)): 주식현금주문가능금액
-      out_stck_sbst_ord_psbl_amt (str(184)): 주식대용주문가능금액
-      out_stck_evlu_ord_psbl_amt (str(184)): 주식평가주문가능금액
-      out_stck_ruse_psbl_ord_psbl_amt (str(184)): 주식재사용가능주문가능금액
-      out_stck_fund_rpch_ord_psbl_amt (str(184)): 주식펀드환매주문가능금액
-      out_bond_ruse_psbl_ord_psbl_amt (str(184)): 채권재사용가능주문가능금액
-      out_rcvb_amt (str(19)): 미수금액
-      out_stck_loan_grta_ruse_psbl_amt (str(184)): 주식대출보증금재사용가능금액
-      out_stck_cash20_max_ord_psbl_amt (str(184)): 주식현금20최대주문가능금액
-      out_stck_cash30_max_ord_psbl_amt (str(184)): 주식현금30최대주문가능금액
-      out_stck_cash40_max_ord_psbl_amt (str(184)): 주식현금40최대주문가능금액
-      out_stck_cash50_max_ord_psbl_amt (str(184)): 주식현금50최대주문가능금액
-      out_stck_cash60_max_ord_psbl_amt (str(184)): 주식현금60최대주문가능금액
-      out_stck_cash100_max_ord_psbl_amt (str(184)): 주식현금100최대주문가능금액
-      out_stck_rsip100_max_ord_psbl_amt (str(184)): 주식재사용불가100최대주문가능
-      out_bond_max_ord_psbl_amt (str(184)): 채권최대주문가능금액
-      out_stck_fncg45_max_ord_psbl_amt (str(182)): 주식융자45최대주문가능금액
-      out_stck_fncg50_max_ord_psbl_amt (str(184)): 주식융자50최대주문가능금액
-      out_stck_fncg60_max_ord_psbl_amt (str(184)): 주식융자60최대주문가능금액
-      out_stck_fncg70_max_ord_psbl_amt (str(182)): 주식융자70최대주문가능금액
-      out_stck_stln_max_ord_psbl_amt (str(184)): 주식대주최대주문가능금액
-      out_lmt_amt (str(19)): 한도금액
-      out_ovrs_stck_itgr_mgna_dvsn_name (str(40)): 해외주식통합증거금구분명
-      out_usd_objt_amt (str(182)): 미화대상금액
-      out_usd_use_amt (str(182)): 미화사용금액
-      out_usd_ord_psbl_amt (str(182)): 미화주문가능금액
-      out_hkd_objt_amt (str(182)): 홍콩달러대상금액
-      out_hkd_use_amt (str(182)): 홍콩달러사용금액
-      out_hkd_ord_psbl_amt (str(182)): 홍콩달러주문가능금액
-      out_jpy_objt_amt (str(182)): 엔화대상금액
-      out_jpy_use_amt (str(182)): 엔화사용금액
-      out_jpy_ord_psbl_amt (str(182)): 엔화주문가능금액
-      out_cny_objt_amt (str(182)): 위안화대상금액
-      out_cny_use_amt (str(182)): 위안화사용금액
-      out_cny_ord_psbl_amt (str(182)): 위안화주문가능금액
-      out_usd_ruse_objt_amt (str(182)): 미화재사용대상금액
-      out_usd_ruse_amt (str(182)): 미화재사용금액
-      out_usd_ruse_ord_psbl_amt (str(182)): 미화재사용주문가능금액
-      out_hkd_ruse_objt_amt (str(182)): 홍콩달러재사용대상금액
-      out_hkd_ruse_amt (str(182)): 홍콩달러재사용금액
-      out_hkd_ruse_ord_psbl_amt (str(172)): 홍콩달러재사용주문가능금액
-      out_jpy_ruse_objt_amt (str(182)): 엔화재사용대상금액
-      out_jpy_ruse_amt (str(182)): 엔화재사용금액
-      out_jpy_ruse_ord_psbl_amt (str(182)): 엔화재사용주문가능금액
-      out_cny_ruse_objt_amt (str(182)): 위안화재사용대상금액
-      out_cny_ruse_amt (str(182)): 위안화재사용금액
-      out_cny_ruse_ord_psbl_amt (str(182)): 위안화재사용주문가능금액
-      out_usd_gnrl_ord_psbl_amt (str(182)): 미화일반주문가능금액
-      out_usd_itgr_ord_psbl_amt (str(182)): 미화통합주문가능금액
-      out_hkd_gnrl_ord_psbl_amt (str(182)): 홍콩달러일반주문가능금액
-      out_hkd_itgr_ord_psbl_amt (str(182)): 홍콩달러통합주문가능금액
-      out_jpy_gnrl_ord_psbl_amt (str(182)): 엔화일반주문가능금액
-      out_jpy_itgr_ord_psbl_amt (str(182)): 엔화통합주문가능금액
-      out_cny_gnrl_ord_psbl_amt (str(182)): 위안화일반주문가능금액
-      out_cny_itgr_ord_psbl_amt (str(182)): 위안화통합주문가능금액
-      out_stck_itgr_cash20_ord_psbl_amt (str(182)): 주식통합현금20주문가능금액
-      out_stck_itgr_cash30_ord_psbl_amt (str(182)): 주식통합현금30주문가능금액
-      out_stck_itgr_cash40_ord_psbl_amt (str(182)): 주식통합현금40주문가능금액
-      out_stck_itgr_cash50_ord_psbl_amt (str(182)): 주식통합현금50주문가능금액
-      out_stck_itgr_cash60_ord_psbl_amt (str(182)): 주식통합현금60주문가능금액
-      out_stck_itgr_cash100_ord_psbl_amt (str(182)): 주식통합현금100주문가능금액
-      out_stck_itgr_100_ord_psbl_amt (str(182)): 주식통합100주문가능금액
-      out_stck_itgr_fncg45_ord_psbl_amt (str(182)): 주식통합융자45주문가능금액
-      out_stck_itgr_fncg50_ord_psbl_amt (str(182)): 주식통합융자50주문가능금액
-      out_stck_itgr_fncg60_ord_psbl_amt (str(182)): 주식통합융자60주문가능금액
-      out_stck_itgr_fncg70_ord_psbl_amt (str(182)): 주식통합융자70주문가능금액
-      out_stck_itgr_stln_ord_psbl_amt (str(182)): 주식통합대주주문가능금액
-      out_bond_itgr_ord_psbl_amt (str(182)): 채권통합주문가능금액
-      out_stck_cash_ovrs_use_amt (str(182)): 주식현금해외사용금액
-      out_stck_sbst_ovrs_use_amt (str(182)): 주식대용해외사용금액
-      out_stck_evlu_ovrs_use_amt (str(182)): 주식평가해외사용금액
-      out_stck_re_use_amt_ovrs_use_amt (str(182)): 주식재사용금액해외사용금액
-      out_stck_fund_rpch_ovrs_use_amt (str(182)): 주식펀드환매해외사용금액
-      out_stck_fncg_rdpt_ovrs_use_amt (str(182)): 주식융자상환해외사용금액
-      out_bond_re_use_ovrs_use_amt (str(182)): 채권재사용해외사용금액
-      out_usd_oth_mket_use_amt (str(182)): 미화타시장사용금액
-      out_jpy_oth_mket_use_amt (str(182)): 엔화타시장사용금액
-      out_cny_oth_mket_use_amt (str(182)): 위안화타시장사용금액
-      out_hkd_oth_mket_use_amt (str(182)): 홍콩달러타시장사용금액
-      out_usd_re_use_oth_mket_use_amt (str(182)): 미화재사용타시장사용금액
-      out_jpy_re_use_oth_mket_use_amt (str(182)): 엔화재사용타시장사용금액
-      out_cny_re_use_oth_mket_use_amt (str(182)): 위안화재사용타시장사용금액
-      out_hkd_re_use_oth_mket_use_amt (str(182)): 홍콩달러재사용타시장사용금액
-      out_hgkg_cny_re_use_amt (str(182)): 홍콩위안화재사용금액
-      out_usd_frst_bltn_exrt (str(23)): 미국달러최초고시환율
-      out_hkd_frst_bltn_exrt (str(23)): 홍콩달러최초고시환율
-      out_jpy_frst_bltn_exrt (str(23)): 일본엔화최초고시환율
-      out_cny_frst_bltn_exrt (str(23)): 중국위안화최초고시환율
+        - acmga_rt (str(114)): 계좌증거금율
+        - acmga_pct100_aptm_rson (str(100)): 계좌증거금100퍼센트지정사유
+        - stck_cash_objt_amt (str(184)): 주식현금대상금액
+        - stck_sbst_objt_amt (str(184)): 주식대용대상금액
+        - stck_evlu_objt_amt (str(184)): 주식평가대상금액
+        - stck_ruse_psbl_objt_amt (str(184)): 주식재사용가능대상금액
+        - stck_fund_rpch_chgs_objt_amt (str(184)): 주식펀드환매대금대상금액
+        - stck_fncg_rdpt_objt_atm (str(184)): 주식융자상환금대상금액
+        - bond_ruse_psbl_objt_amt (str(184)): 채권재사용가능대상금액
+        - stck_cash_use_amt (str(184)): 주식현금사용금액
+        - stck_sbst_use_amt (str(184)): 주식대용사용금액
+        - stck_evlu_use_amt (str(184)): 주식평가사용금액
+        - stck_ruse_psbl_amt_use_amt (str(184)): 주식재사용가능금사용금액
+        - stck_fund_rpch_chgs_use_amt (str(184)): 주식펀드환매대금사용금액
+        - stck_fncg_rdpt_amt_use_amt (str(184)): 주식융자상환금사용금액
+        - bond_ruse_psbl_amt_use_amt (str(184)): 채권재사용가능금사용금액
+        - stck_cash_ord_psbl_amt (str(184)): 주식현금주문가능금액
+        - stck_sbst_ord_psbl_amt (str(184)): 주식대용주문가능금액
+        - stck_evlu_ord_psbl_amt (str(184)): 주식평가주문가능금액
+        - stck_ruse_psbl_ord_psbl_amt (str(184)): 주식재사용가능주문가능금액
+        - stck_fund_rpch_ord_psbl_amt (str(184)): 주식펀드환매주문가능금액
+        - bond_ruse_psbl_ord_psbl_amt (str(184)): 채권재사용가능주문가능금액
+        - rcvb_amt (str(19)): 미수금액
+        - stck_loan_grta_ruse_psbl_amt (str(184)): 주식대출보증금재사용가능금액
+        - stck_cash20_max_ord_psbl_amt (str(184)): 주식현금20최대주문가능금액
+        - stck_cash30_max_ord_psbl_amt (str(184)): 주식현금30최대주문가능금액
+        - stck_cash40_max_ord_psbl_amt (str(184)): 주식현금40최대주문가능금액
+        - stck_cash50_max_ord_psbl_amt (str(184)): 주식현금50최대주문가능금액
+        - stck_cash60_max_ord_psbl_amt (str(184)): 주식현금60최대주문가능금액
+        - stck_cash100_max_ord_psbl_amt (str(184)): 주식현금100최대주문가능금액
+        - stck_rsip100_max_ord_psbl_amt (str(184)): 주식재사용불가100최대주문가능
+        - bond_max_ord_psbl_amt (str(184)): 채권최대주문가능금액
+        - stck_fncg45_max_ord_psbl_amt (str(182)): 주식융자45최대주문가능금액
+        - stck_fncg50_max_ord_psbl_amt (str(184)): 주식융자50최대주문가능금액
+        - stck_fncg60_max_ord_psbl_amt (str(184)): 주식융자60최대주문가능금액
+        - stck_fncg70_max_ord_psbl_amt (str(182)): 주식융자70최대주문가능금액
+        - stck_stln_max_ord_psbl_amt (str(184)): 주식대주최대주문가능금액
+        - lmt_amt (str(19)): 한도금액
+        - ovrs_stck_itgr_mgna_dvsn_name (str(40)): 해외주식통합증거금구분명
+        - usd_objt_amt (str(182)): 미화대상금액
+        - usd_use_amt (str(182)): 미화사용금액
+        - usd_ord_psbl_amt (str(182)): 미화주문가능금액
+        - hkd_objt_amt (str(182)): 홍콩달러대상금액
+        - hkd_use_amt (str(182)): 홍콩달러사용금액
+        - hkd_ord_psbl_amt (str(182)): 홍콩달러주문가능금액
+        - jpy_objt_amt (str(182)): 엔화대상금액
+        - jpy_use_amt (str(182)): 엔화사용금액
+        - jpy_ord_psbl_amt (str(182)): 엔화주문가능금액
+        - cny_objt_amt (str(182)): 위안화대상금액
+        - cny_use_amt (str(182)): 위안화사용금액
+        - cny_ord_psbl_amt (str(182)): 위안화주문가능금액
+        - usd_ruse_objt_amt (str(182)): 미화재사용대상금액
+        - usd_ruse_amt (str(182)): 미화재사용금액
+        - usd_ruse_ord_psbl_amt (str(182)): 미화재사용주문가능금액
+        - hkd_ruse_objt_amt (str(182)): 홍콩달러재사용대상금액
+        - hkd_ruse_amt (str(182)): 홍콩달러재사용금액
+        - hkd_ruse_ord_psbl_amt (str(172)): 홍콩달러재사용주문가능금액
+        - jpy_ruse_objt_amt (str(182)): 엔화재사용대상금액
+        - jpy_ruse_amt (str(182)): 엔화재사용금액
+        - jpy_ruse_ord_psbl_amt (str(182)): 엔화재사용주문가능금액
+        - cny_ruse_objt_amt (str(182)): 위안화재사용대상금액
+        - cny_ruse_amt (str(182)): 위안화재사용금액
+        - cny_ruse_ord_psbl_amt (str(182)): 위안화재사용주문가능금액
+        - usd_gnrl_ord_psbl_amt (str(182)): 미화일반주문가능금액
+        - usd_itgr_ord_psbl_amt (str(182)): 미화통합주문가능금액
+        - hkd_gnrl_ord_psbl_amt (str(182)): 홍콩달러일반주문가능금액
+        - hkd_itgr_ord_psbl_amt (str(182)): 홍콩달러통합주문가능금액
+        - jpy_gnrl_ord_psbl_amt (str(182)): 엔화일반주문가능금액
+        - jpy_itgr_ord_psbl_amt (str(182)): 엔화통합주문가능금액
+        - cny_gnrl_ord_psbl_amt (str(182)): 위안화일반주문가능금액
+        - cny_itgr_ord_psbl_amt (str(182)): 위안화통합주문가능금액
+        - stck_itgr_cash20_ord_psbl_amt (str(182)): 주식통합현금20주문가능금액
+        - stck_itgr_cash30_ord_psbl_amt (str(182)): 주식통합현금30주문가능금액
+        - stck_itgr_cash40_ord_psbl_amt (str(182)): 주식통합현금40주문가능금액
+        - stck_itgr_cash50_ord_psbl_amt (str(182)): 주식통합현금50주문가능금액
+        - stck_itgr_cash60_ord_psbl_amt (str(182)): 주식통합현금60주문가능금액
+        - stck_itgr_cash100_ord_psbl_amt (str(182)): 주식통합현금100주문가능금액
+        - stck_itgr_100_ord_psbl_amt (str(182)): 주식통합100주문가능금액
+        - stck_itgr_fncg45_ord_psbl_amt (str(182)): 주식통합융자45주문가능금액
+        - stck_itgr_fncg50_ord_psbl_amt (str(182)): 주식통합융자50주문가능금액
+        - stck_itgr_fncg60_ord_psbl_amt (str(182)): 주식통합융자60주문가능금액
+        - stck_itgr_fncg70_ord_psbl_amt (str(182)): 주식통합융자70주문가능금액
+        - stck_itgr_stln_ord_psbl_amt (str(182)): 주식통합대주주문가능금액
+        - bond_itgr_ord_psbl_amt (str(182)): 채권통합주문가능금액
+        - stck_cash_ovrs_use_amt (str(182)): 주식현금해외사용금액
+        - stck_sbst_ovrs_use_amt (str(182)): 주식대용해외사용금액
+        - stck_evlu_ovrs_use_amt (str(182)): 주식평가해외사용금액
+        - stck_re_use_amt_ovrs_use_amt (str(182)): 주식재사용금액해외사용금액
+        - stck_fund_rpch_ovrs_use_amt (str(182)): 주식펀드환매해외사용금액
+        - stck_fncg_rdpt_ovrs_use_amt (str(182)): 주식융자상환해외사용금액
+        - bond_re_use_ovrs_use_amt (str(182)): 채권재사용해외사용금액
+        - usd_oth_mket_use_amt (str(182)): 미화타시장사용금액
+        - jpy_oth_mket_use_amt (str(182)): 엔화타시장사용금액
+        - cny_oth_mket_use_amt (str(182)): 위안화타시장사용금액
+        - hkd_oth_mket_use_amt (str(182)): 홍콩달러타시장사용금액
+        - usd_re_use_oth_mket_use_amt (str(182)): 미화재사용타시장사용금액
+        - jpy_re_use_oth_mket_use_amt (str(182)): 엔화재사용타시장사용금액
+        - cny_re_use_oth_mket_use_amt (str(182)): 위안화재사용타시장사용금액
+        - hkd_re_use_oth_mket_use_amt (str(182)): 홍콩달러재사용타시장사용금액
+        - hgkg_cny_re_use_amt (str(182)): 홍콩위안화재사용금액
+        - usd_frst_bltn_exrt (str(23)): 미국달러최초고시환율
+        - hkd_frst_bltn_exrt (str(23)): 홍콩달러최초고시환율
+        - jpy_frst_bltn_exrt (str(23)): 일본엔화최초고시환율
+        - cny_frst_bltn_exrt (str(23)): 중국위안화최초고시환율
     
     Raises:
       Exception: 에러
@@ -3113,7 +2753,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': '국내주식-191',
     }
     params = {
       'CANO': in_CANO,
@@ -3126,7 +2765,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -3141,110 +2780,6 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output'] = out_data['output']
-    return_data['out_acmga_rt'] = out_data['acmga_rt']
-    return_data['out_acmga_pct100_aptm_rson'] = out_data['acmga_pct100_aptm_rson']
-    return_data['out_stck_cash_objt_amt'] = out_data['stck_cash_objt_amt']
-    return_data['out_stck_sbst_objt_amt'] = out_data['stck_sbst_objt_amt']
-    return_data['out_stck_evlu_objt_amt'] = out_data['stck_evlu_objt_amt']
-    return_data['out_stck_ruse_psbl_objt_amt'] = out_data['stck_ruse_psbl_objt_amt']
-    return_data['out_stck_fund_rpch_chgs_objt_amt'] = out_data['stck_fund_rpch_chgs_objt_amt']
-    return_data['out_stck_fncg_rdpt_objt_atm'] = out_data['stck_fncg_rdpt_objt_atm']
-    return_data['out_bond_ruse_psbl_objt_amt'] = out_data['bond_ruse_psbl_objt_amt']
-    return_data['out_stck_cash_use_amt'] = out_data['stck_cash_use_amt']
-    return_data['out_stck_sbst_use_amt'] = out_data['stck_sbst_use_amt']
-    return_data['out_stck_evlu_use_amt'] = out_data['stck_evlu_use_amt']
-    return_data['out_stck_ruse_psbl_amt_use_amt'] = out_data['stck_ruse_psbl_amt_use_amt']
-    return_data['out_stck_fund_rpch_chgs_use_amt'] = out_data['stck_fund_rpch_chgs_use_amt']
-    return_data['out_stck_fncg_rdpt_amt_use_amt'] = out_data['stck_fncg_rdpt_amt_use_amt']
-    return_data['out_bond_ruse_psbl_amt_use_amt'] = out_data['bond_ruse_psbl_amt_use_amt']
-    return_data['out_stck_cash_ord_psbl_amt'] = out_data['stck_cash_ord_psbl_amt']
-    return_data['out_stck_sbst_ord_psbl_amt'] = out_data['stck_sbst_ord_psbl_amt']
-    return_data['out_stck_evlu_ord_psbl_amt'] = out_data['stck_evlu_ord_psbl_amt']
-    return_data['out_stck_ruse_psbl_ord_psbl_amt'] = out_data['stck_ruse_psbl_ord_psbl_amt']
-    return_data['out_stck_fund_rpch_ord_psbl_amt'] = out_data['stck_fund_rpch_ord_psbl_amt']
-    return_data['out_bond_ruse_psbl_ord_psbl_amt'] = out_data['bond_ruse_psbl_ord_psbl_amt']
-    return_data['out_rcvb_amt'] = out_data['rcvb_amt']
-    return_data['out_stck_loan_grta_ruse_psbl_amt'] = out_data['stck_loan_grta_ruse_psbl_amt']
-    return_data['out_stck_cash20_max_ord_psbl_amt'] = out_data['stck_cash20_max_ord_psbl_amt']
-    return_data['out_stck_cash30_max_ord_psbl_amt'] = out_data['stck_cash30_max_ord_psbl_amt']
-    return_data['out_stck_cash40_max_ord_psbl_amt'] = out_data['stck_cash40_max_ord_psbl_amt']
-    return_data['out_stck_cash50_max_ord_psbl_amt'] = out_data['stck_cash50_max_ord_psbl_amt']
-    return_data['out_stck_cash60_max_ord_psbl_amt'] = out_data['stck_cash60_max_ord_psbl_amt']
-    return_data['out_stck_cash100_max_ord_psbl_amt'] = out_data['stck_cash100_max_ord_psbl_amt']
-    return_data['out_stck_rsip100_max_ord_psbl_amt'] = out_data['stck_rsip100_max_ord_psbl_amt']
-    return_data['out_bond_max_ord_psbl_amt'] = out_data['bond_max_ord_psbl_amt']
-    return_data['out_stck_fncg45_max_ord_psbl_amt'] = out_data['stck_fncg45_max_ord_psbl_amt']
-    return_data['out_stck_fncg50_max_ord_psbl_amt'] = out_data['stck_fncg50_max_ord_psbl_amt']
-    return_data['out_stck_fncg60_max_ord_psbl_amt'] = out_data['stck_fncg60_max_ord_psbl_amt']
-    return_data['out_stck_fncg70_max_ord_psbl_amt'] = out_data['stck_fncg70_max_ord_psbl_amt']
-    return_data['out_stck_stln_max_ord_psbl_amt'] = out_data['stck_stln_max_ord_psbl_amt']
-    return_data['out_lmt_amt'] = out_data['lmt_amt']
-    return_data['out_ovrs_stck_itgr_mgna_dvsn_name'] = out_data['ovrs_stck_itgr_mgna_dvsn_name']
-    return_data['out_usd_objt_amt'] = out_data['usd_objt_amt']
-    return_data['out_usd_use_amt'] = out_data['usd_use_amt']
-    return_data['out_usd_ord_psbl_amt'] = out_data['usd_ord_psbl_amt']
-    return_data['out_hkd_objt_amt'] = out_data['hkd_objt_amt']
-    return_data['out_hkd_use_amt'] = out_data['hkd_use_amt']
-    return_data['out_hkd_ord_psbl_amt'] = out_data['hkd_ord_psbl_amt']
-    return_data['out_jpy_objt_amt'] = out_data['jpy_objt_amt']
-    return_data['out_jpy_use_amt'] = out_data['jpy_use_amt']
-    return_data['out_jpy_ord_psbl_amt'] = out_data['jpy_ord_psbl_amt']
-    return_data['out_cny_objt_amt'] = out_data['cny_objt_amt']
-    return_data['out_cny_use_amt'] = out_data['cny_use_amt']
-    return_data['out_cny_ord_psbl_amt'] = out_data['cny_ord_psbl_amt']
-    return_data['out_usd_ruse_objt_amt'] = out_data['usd_ruse_objt_amt']
-    return_data['out_usd_ruse_amt'] = out_data['usd_ruse_amt']
-    return_data['out_usd_ruse_ord_psbl_amt'] = out_data['usd_ruse_ord_psbl_amt']
-    return_data['out_hkd_ruse_objt_amt'] = out_data['hkd_ruse_objt_amt']
-    return_data['out_hkd_ruse_amt'] = out_data['hkd_ruse_amt']
-    return_data['out_hkd_ruse_ord_psbl_amt'] = out_data['hkd_ruse_ord_psbl_amt']
-    return_data['out_jpy_ruse_objt_amt'] = out_data['jpy_ruse_objt_amt']
-    return_data['out_jpy_ruse_amt'] = out_data['jpy_ruse_amt']
-    return_data['out_jpy_ruse_ord_psbl_amt'] = out_data['jpy_ruse_ord_psbl_amt']
-    return_data['out_cny_ruse_objt_amt'] = out_data['cny_ruse_objt_amt']
-    return_data['out_cny_ruse_amt'] = out_data['cny_ruse_amt']
-    return_data['out_cny_ruse_ord_psbl_amt'] = out_data['cny_ruse_ord_psbl_amt']
-    return_data['out_usd_gnrl_ord_psbl_amt'] = out_data['usd_gnrl_ord_psbl_amt']
-    return_data['out_usd_itgr_ord_psbl_amt'] = out_data['usd_itgr_ord_psbl_amt']
-    return_data['out_hkd_gnrl_ord_psbl_amt'] = out_data['hkd_gnrl_ord_psbl_amt']
-    return_data['out_hkd_itgr_ord_psbl_amt'] = out_data['hkd_itgr_ord_psbl_amt']
-    return_data['out_jpy_gnrl_ord_psbl_amt'] = out_data['jpy_gnrl_ord_psbl_amt']
-    return_data['out_jpy_itgr_ord_psbl_amt'] = out_data['jpy_itgr_ord_psbl_amt']
-    return_data['out_cny_gnrl_ord_psbl_amt'] = out_data['cny_gnrl_ord_psbl_amt']
-    return_data['out_cny_itgr_ord_psbl_amt'] = out_data['cny_itgr_ord_psbl_amt']
-    return_data['out_stck_itgr_cash20_ord_psbl_amt'] = out_data['stck_itgr_cash20_ord_psbl_amt']
-    return_data['out_stck_itgr_cash30_ord_psbl_amt'] = out_data['stck_itgr_cash30_ord_psbl_amt']
-    return_data['out_stck_itgr_cash40_ord_psbl_amt'] = out_data['stck_itgr_cash40_ord_psbl_amt']
-    return_data['out_stck_itgr_cash50_ord_psbl_amt'] = out_data['stck_itgr_cash50_ord_psbl_amt']
-    return_data['out_stck_itgr_cash60_ord_psbl_amt'] = out_data['stck_itgr_cash60_ord_psbl_amt']
-    return_data['out_stck_itgr_cash100_ord_psbl_amt'] = out_data['stck_itgr_cash100_ord_psbl_amt']
-    return_data['out_stck_itgr_100_ord_psbl_amt'] = out_data['stck_itgr_100_ord_psbl_amt']
-    return_data['out_stck_itgr_fncg45_ord_psbl_amt'] = out_data['stck_itgr_fncg45_ord_psbl_amt']
-    return_data['out_stck_itgr_fncg50_ord_psbl_amt'] = out_data['stck_itgr_fncg50_ord_psbl_amt']
-    return_data['out_stck_itgr_fncg60_ord_psbl_amt'] = out_data['stck_itgr_fncg60_ord_psbl_amt']
-    return_data['out_stck_itgr_fncg70_ord_psbl_amt'] = out_data['stck_itgr_fncg70_ord_psbl_amt']
-    return_data['out_stck_itgr_stln_ord_psbl_amt'] = out_data['stck_itgr_stln_ord_psbl_amt']
-    return_data['out_bond_itgr_ord_psbl_amt'] = out_data['bond_itgr_ord_psbl_amt']
-    return_data['out_stck_cash_ovrs_use_amt'] = out_data['stck_cash_ovrs_use_amt']
-    return_data['out_stck_sbst_ovrs_use_amt'] = out_data['stck_sbst_ovrs_use_amt']
-    return_data['out_stck_evlu_ovrs_use_amt'] = out_data['stck_evlu_ovrs_use_amt']
-    return_data['out_stck_re_use_amt_ovrs_use_amt'] = out_data['stck_re_use_amt_ovrs_use_amt']
-    return_data['out_stck_fund_rpch_ovrs_use_amt'] = out_data['stck_fund_rpch_ovrs_use_amt']
-    return_data['out_stck_fncg_rdpt_ovrs_use_amt'] = out_data['stck_fncg_rdpt_ovrs_use_amt']
-    return_data['out_bond_re_use_ovrs_use_amt'] = out_data['bond_re_use_ovrs_use_amt']
-    return_data['out_usd_oth_mket_use_amt'] = out_data['usd_oth_mket_use_amt']
-    return_data['out_jpy_oth_mket_use_amt'] = out_data['jpy_oth_mket_use_amt']
-    return_data['out_cny_oth_mket_use_amt'] = out_data['cny_oth_mket_use_amt']
-    return_data['out_hkd_oth_mket_use_amt'] = out_data['hkd_oth_mket_use_amt']
-    return_data['out_usd_re_use_oth_mket_use_amt'] = out_data['usd_re_use_oth_mket_use_amt']
-    return_data['out_jpy_re_use_oth_mket_use_amt'] = out_data['jpy_re_use_oth_mket_use_amt']
-    return_data['out_cny_re_use_oth_mket_use_amt'] = out_data['cny_re_use_oth_mket_use_amt']
-    return_data['out_hkd_re_use_oth_mket_use_amt'] = out_data['hkd_re_use_oth_mket_use_amt']
-    return_data['out_hgkg_cny_re_use_amt'] = out_data['hgkg_cny_re_use_amt']
-    return_data['out_usd_frst_bltn_exrt'] = out_data['usd_frst_bltn_exrt']
-    return_data['out_hkd_frst_bltn_exrt'] = out_data['hkd_frst_bltn_exrt']
-    return_data['out_jpy_frst_bltn_exrt'] = out_data['jpy_frst_bltn_exrt']
-    return_data['out_cny_frst_bltn_exrt'] = out_data['cny_frst_bltn_exrt']
     
     return return_data
 
@@ -3287,36 +2822,36 @@ class KoreaInvestmentAPI():
       out_rt_cd (str(1)): 성공 실패 여부
       out_msg_cd (str(8)): 응답코드
       out_msg1 (str(80)): 응답메세지
-      out_output1 (str): 응답상세. array
-      out_acno10 (str(10)): 계좌번호10
-      out_rght_type_cd (str(2)): 권리유형코드. 1	유상 2	무상 3	배당 4	매수청구 5	공개매수 6	주주총회 7	신주인수권증서 8	반대의사 9	신주인수권증권 11	합병 12	회사분할 13	주식교환 14	액면분할 15	액면병합 16	종목변경 17	감자 18	신구주합병 21	후합병 22	후회사분할 23	후주식교환 24	후액면분할 25	후액면병합 26	후종목변경 27	후감자 28	후신구주합병 31	뮤츄얼펀드 32	ETF 33	선박투자회사 34	투융자회사 35	해외자원 36	부동산신탁(Ritz) 37	상장수익증권 41	ELW만기 42	ELS분배 43	DLS분배 44	하일드펀드 45	ETN 51	전환청구 52	교환청구 53	BW청구 54	WRT청구 55	채권풋옵션청구 56	전환우선주청구 57	전환조건부청구 58	전자증권일괄입고 59	클라우드펀딩일괄입고 61	원리금상환 62	스트립채권 71	WRT소멸 72	WRT증권 73	DR전환 74	배당옵션 75	특별배당 76	ISINCODE변경 77	실권주청약 81	해외분배금(청산) 82	해외분배금(조기상환) 83	해외분배금(상장폐지) 84	DR FEE 85	SECTION 871M 86	종목전환 87	재매수 88	종목교환 89	기타이벤트 91	공모주 92	청약 93	환매 99	기타권리사유
-      out_bass_dt (str(8)): 기준일자
-      out_rght_cblc_type_cd (str(2)): 권리잔고유형코드. 1	입고 2	출고 3	출고입고 4	출고입금 5	출고출금 10	현금입금 11	단수주대금입금 12	교부금입금 13	유상감자대금입금 14	지연이자입금 15	이자지급 16	대주권리금출금 17	분할상환 18	만기상환 19	조기상환 20	출금 21	입고&입금 22	입고&입금&단수주대금입금 25	유상환불금입금 26	중도상환 27	분할합병세금출금
-      out_rptt_pdno (str(12)): 대표상품번호
-      out_pdno (str(12)): 상품번호
-      out_prdt_type_cd (str(3)): 상품유형코드
-      out_shtn_pdno (str(12)): 단축상품번호
-      out_prdt_name (str(60)): 상품명
-      out_cblc_qty (str(19)): 잔고수량
-      out_last_alct_qty (str(19)): 최종배정수량
-      out_excs_alct_qty (str(19)): 초과배정수량
-      out_tot_alct_qty (str(19)): 총배정수량
-      out_last_ftsk_qty (str(191)): 최종단수주수량
-      out_last_alct_amt (str(19)): 최종배정금액
-      out_last_ftsk_chgs (str(19)): 최종단수주대금
-      out_rdpt_prca (str(19)): 상환원금
-      out_dlay_int_amt (str(19)): 지연이자금액
-      out_lstg_dt (str(8)): 상장일자
-      out_sbsc_end_dt (str(8)): 청약종료일자
-      out_cash_dfrm_dt (str(8)): 현금지급일자
-      out_rqst_qty (str(19)): 신청수량
-      out_rqst_amt (str(19)): 신청금액
-      out_rqst_dt (str(8)): 신청일자
-      out_rfnd_dt (str(8)): 환불일자
-      out_rfnd_amt (str(19)): 환불금액
-      out_lstg_stqt (str(19)): 상장주수
-      out_tax_amt (str(19)): 세금금액
-      out_sbsc_unpr (str(224)): 청약단가
+      out_output1 (list): 응답상세. array
+        - acno10 (str(10)): 계좌번호10
+        - rght_type_cd (str(2)): 권리유형코드. 1	유상 2	무상 3	배당 4	매수청구 5	공개매수 6	주주총회 7	신주인수권증서 8	반대의사 9	신주인수권증권 11	합병 12	회사분할 13	주식교환 14	액면분할 15	액면병합 16	종목변경 17	감자 18	신구주합병 21	후합병 22	후회사분할 23	후주식교환 24	후액면분할 25	후액면병합 26	후종목변경 27	후감자 28	후신구주합병 31	뮤츄얼펀드 32	ETF 33	선박투자회사 34	투융자회사 35	해외자원 36	부동산신탁(Ritz) 37	상장수익증권 41	ELW만기 42	ELS분배 43	DLS분배 44	하일드펀드 45	ETN 51	전환청구 52	교환청구 53	BW청구 54	WRT청구 55	채권풋옵션청구 56	전환우선주청구 57	전환조건부청구 58	전자증권일괄입고 59	클라우드펀딩일괄입고 61	원리금상환 62	스트립채권 71	WRT소멸 72	WRT증권 73	DR전환 74	배당옵션 75	특별배당 76	ISINCODE변경 77	실권주청약 81	해외분배금(청산) 82	해외분배금(조기상환) 83	해외분배금(상장폐지) 84	DR FEE 85	SECTION 871M 86	종목전환 87	재매수 88	종목교환 89	기타이벤트 91	공모주 92	청약 93	환매 99	기타권리사유
+        - bass_dt (str(8)): 기준일자
+        - rght_cblc_type_cd (str(2)): 권리잔고유형코드. 1	입고 2	출고 3	출고입고 4	출고입금 5	출고출금 10	현금입금 11	단수주대금입금 12	교부금입금 13	유상감자대금입금 14	지연이자입금 15	이자지급 16	대주권리금출금 17	분할상환 18	만기상환 19	조기상환 20	출금 21	입고&입금 22	입고&입금&단수주대금입금 25	유상환불금입금 26	중도상환 27	분할합병세금출금
+        - rptt_pdno (str(12)): 대표상품번호
+        - pdno (str(12)): 상품번호
+        - prdt_type_cd (str(3)): 상품유형코드
+        - shtn_pdno (str(12)): 단축상품번호
+        - prdt_name (str(60)): 상품명
+        - cblc_qty (str(19)): 잔고수량
+        - last_alct_qty (str(19)): 최종배정수량
+        - excs_alct_qty (str(19)): 초과배정수량
+        - tot_alct_qty (str(19)): 총배정수량
+        - last_ftsk_qty (str(191)): 최종단수주수량
+        - last_alct_amt (str(19)): 최종배정금액
+        - last_ftsk_chgs (str(19)): 최종단수주대금
+        - rdpt_prca (str(19)): 상환원금
+        - dlay_int_amt (str(19)): 지연이자금액
+        - lstg_dt (str(8)): 상장일자
+        - sbsc_end_dt (str(8)): 청약종료일자
+        - cash_dfrm_dt (str(8)): 현금지급일자
+        - rqst_qty (str(19)): 신청수량
+        - rqst_amt (str(19)): 신청금액
+        - rqst_dt (str(8)): 신청일자
+        - rfnd_dt (str(8)): 환불일자
+        - rfnd_amt (str(19)): 환불금액
+        - lstg_stqt (str(19)): 상장주수
+        - tax_amt (str(19)): 세금금액
+        - sbsc_unpr (str(224)): 청약단가
     
     Raises:
       Exception: 에러
@@ -3339,7 +2874,6 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'api-id': '국내주식-211',
     }
     params = {
       'INQR_DVSN': in_INQR_DVSN,
@@ -3359,7 +2893,7 @@ class KoreaInvestmentAPI():
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
     
-    if not out_data or out_data['rt_cd'] != 'Y':
+    if not out_data or out_data['rt_cd'] != '0':
       msg = out_data['msg1'] if out_data and out_data['msg1'] else 'Error'
       raise Exception(msg)
     
@@ -3374,34 +2908,5 @@ class KoreaInvestmentAPI():
     return_data['out_msg_cd'] = out_data['msg_cd']
     return_data['out_msg1'] = out_data['msg1']
     return_data['out_output1'] = out_data['output1']
-    return_data['out_acno10'] = out_data['acno10']
-    return_data['out_rght_type_cd'] = out_data['rght_type_cd']
-    return_data['out_bass_dt'] = out_data['bass_dt']
-    return_data['out_rght_cblc_type_cd'] = out_data['rght_cblc_type_cd']
-    return_data['out_rptt_pdno'] = out_data['rptt_pdno']
-    return_data['out_pdno'] = out_data['pdno']
-    return_data['out_prdt_type_cd'] = out_data['prdt_type_cd']
-    return_data['out_shtn_pdno'] = out_data['shtn_pdno']
-    return_data['out_prdt_name'] = out_data['prdt_name']
-    return_data['out_cblc_qty'] = out_data['cblc_qty']
-    return_data['out_last_alct_qty'] = out_data['last_alct_qty']
-    return_data['out_excs_alct_qty'] = out_data['excs_alct_qty']
-    return_data['out_tot_alct_qty'] = out_data['tot_alct_qty']
-    return_data['out_last_ftsk_qty'] = out_data['last_ftsk_qty']
-    return_data['out_last_alct_amt'] = out_data['last_alct_amt']
-    return_data['out_last_ftsk_chgs'] = out_data['last_ftsk_chgs']
-    return_data['out_rdpt_prca'] = out_data['rdpt_prca']
-    return_data['out_dlay_int_amt'] = out_data['dlay_int_amt']
-    return_data['out_lstg_dt'] = out_data['lstg_dt']
-    return_data['out_sbsc_end_dt'] = out_data['sbsc_end_dt']
-    return_data['out_cash_dfrm_dt'] = out_data['cash_dfrm_dt']
-    return_data['out_rqst_qty'] = out_data['rqst_qty']
-    return_data['out_rqst_amt'] = out_data['rqst_amt']
-    return_data['out_rqst_dt'] = out_data['rqst_dt']
-    return_data['out_rfnd_dt'] = out_data['rfnd_dt']
-    return_data['out_rfnd_amt'] = out_data['rfnd_amt']
-    return_data['out_lstg_stqt'] = out_data['lstg_stqt']
-    return_data['out_tax_amt'] = out_data['tax_amt']
-    return_data['out_sbsc_unpr'] = out_data['sbsc_unpr']
     
     return return_data
