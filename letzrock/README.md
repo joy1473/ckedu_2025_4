@@ -84,7 +84,7 @@ user1_ki_api = KoreaInvestmentAPI(True, app_key, app_secret)
 user1_ki_api.connect()
 
 # 매도가능수량조회
-in_tr_id = 'TTTC8408RXXXX'
+in_tr_id = 'TTTC8408R'
 in_tr_cont = ''
 in_custtype = 'P'
 in_seq_no = ''
