@@ -1,4 +1,5 @@
 import requests
+import json
 import os
 import logging
 from api_utils import format_datetime
@@ -21,21 +22,24 @@ class KiwoomAPI():
   키움증권 REST API 서버와 직접 요청과 응답을 주고받는 클래스
   API 신청 계좌만 조회 가능
   """
-  def __init__(self, in_app_key: str, in_app_secret: str):
+  def __init__(self, is_real: bool, in_app_key: str, in_app_secret: str):
     """
     키움증권 REST API init
 
     Args:
+      is_real (boon): 실전 여부
       in_app_key (str): 키움증권 API 신청 계좌의 앱키
       in_app_secret (str): 키움증권 API 신청 계좌의 시크릿키
     """
     # 키움증권 API 신청 키
     self.app_key = in_app_key
     self.app_secret = in_app_secret
-    ## 실전
-    self.base_url = "https://api.kiwoom.com"
-    ## 모의
-    #self.base_url = "https://mockapi.kiwoom.com"
+    if is_real:
+      ## 실전
+      self.base_url = "https://api.kiwoom.com"
+    else:
+      ## 모의
+      self.base_url = "https://mockapi.kiwoom.com"
     # 토큰 정보
     self.token_data = None
   
@@ -43,12 +47,26 @@ class KiwoomAPI():
     """
     내부 공통 요청 처리 함수
     """
-    
+    #headers["Accept"] = "text/plain"
+    #headers["charset"] = "UTF-8"
     full_url = f"{self.base_url}{url}"
-    response = requests.post(full_url, headers=headers, params=params)
+    logger.debug(headers)
+    logger.debug(params)
+    logger.debug(full_url)
+    response = requests.post(full_url, data=json.dumps(params), headers=headers)
     response.raise_for_status()
+    logger.debug(f"status_code : {response.status_code}")
     if response.status_code == 200:
-      return response.headers(), response.json()
+      #logger.debug("response headers :", json.dumps(response.headers()))
+      #logger.debug("response text :", response.text)
+      response_data = json.loads(response.text)
+      logger.debug("response data :", response_data)
+      response_headers = {}
+      for x in response.headers.keys():
+        if x.islower():
+            response_headers[x] = response.headers.get(x)
+      logger.debug("response headers :", response_headers)
+      return response_headers, response_data
     else:
       return None, None
   
@@ -62,7 +80,7 @@ class KiwoomAPI():
     """
     
     headers = {
-      'Content-Type': 'application/json;charset=UTF-8'
+      "Content-Type": "application/json"
     }
     params = {
       "grant_type": "client_credentials",
@@ -70,10 +88,22 @@ class KiwoomAPI():
       "secretkey": self.app_secret,
     }
     url = '/oauth2/token'
-    header_data, token_data = self._send_request(url, params, headers)
     
-    if token_data and token_data['token']:
-      self.token_data = token_data
+    full_url = f"{self.base_url}{url}"
+    logger.debug(headers)
+    logger.debug(params)
+    logger.debug(full_url)
+    response = requests.post(full_url, data=json.dumps(params), headers=headers)
+    response.raise_for_status()
+    logger.debug(f"status_code : {response.status_code}")
+    if response.status_code == 200:
+      token_data = response.json()
+      print(token_data)
+      if token_data and token_data['token']:
+        self.token_data = token_data
+      else:
+        self.token_data = None
+        raise RuntimeError("Not connected: token is not available.")
     else:
       self.token_data = None
       raise RuntimeError("Not connected: token is not available.")

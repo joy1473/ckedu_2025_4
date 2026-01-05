@@ -29,9 +29,9 @@ python openbank_user_app.py
 4. 새 창에서 휴대폰 인증 후 계좌 정보 등록
 5. 등록 결과 확인
 
-#### **인증**
-#### **토큰 각각 발행** : 사용자_토큰_정보.json / 자체인증_이용기관_토큰_정보.json 파일로 저장
-#### **사용자정보조회 API 로 등록 정보 확인** : 사용자_정보.json 파일로 저장 (인증을 여러번 실행시 등록한 계좌 모두 조회됨. 최근 1건만 저장)
+**인증**
+-> **토큰 각각 발행** : 사용자_토큰_정보.json / 자체인증_이용기관_토큰_정보.json 파일로 저장
+-> **사용자정보조회 API 로 등록 정보 확인** : 사용자_정보.json 파일로 저장 (인증을 여러번 실행시 등록한 계좌 모두 조회됨. 최근 1건만 저장)
 
 
 ## 키움증권 API 사용 방법
@@ -50,7 +50,9 @@ app_key = "PSg5dctL9dKPo727J13Ur405OSXXXXXXXXXX"
 # user1 계좌의 시크릿키
 app_secret = "yo2t8zS68zpdjGuWvFyM9VikjXE0OIXXXXXXXXXX"
 # user1 계좌의 API 객체
-user1_kiwoom_api = KiwoomAPI(app_key, app_secret)
+user1_kiwoom_api = KiwoomAPI(True, app_key, app_secret)
+# 접근토큰 발급 요청
+user1_kiwoom_api.connect()
 
 # 일별거래상세요청
 in_cont_yn = ''
@@ -77,7 +79,9 @@ app_key = "PSg5dctL9dKPo727J13Ur405OSXXXXXXXXXX"
 # user1 계좌의 시크릿키
 app_secret = "yo2t8zS68zpdjGuWvFyM9VikjXE0i0CbgPEamnqPA00G0bIfrdfQb2RUD1xP7SqatQXr1cD1fGUNsb78MMXoq6o4lAYt9YTtHAjbMoFy+c72kbq5owQY1Pvp39/x6ejpJlXCj7gE3yVOB/h25Hvl+URmYeBTfrQeOqIAOYc/OIXXXXXXXXXX"
 # user1 계좌의 API 객체
-user1_ki_api = KoreaInvestmentAPI(app_key, app_secret)
+user1_ki_api = KoreaInvestmentAPI(True, app_key, app_secret)
+# 접근토큰 발급 요청
+user1_ki_api.connect()
 
 # 매도가능수량조회
 in_tr_id = 'TTTC8408RXXXX'

@@ -2,7 +2,7 @@ from datetime import datetime
 import secrets
 import string
 
-def format_datetime(format: str | None):
+def format_datetime(format: str = None):
   """
   현재 날짜를 형식에 맞춰 문자로 반환  
   
