@@ -4,7 +4,7 @@ import requests
 import os
 from dotenv import load_dotenv
 import json
-from app_1 import generate_secure_key
+from api_utils import generate_secure_key
 
 # .env 파일에서 정보를 로드합니다.
 load_dotenv()
@@ -18,6 +18,7 @@ OPENBANK_DOMAIN = "https://openapi.openbanking.or.kr"
 OPENBANK_DOMAIN = "https://testapi.openbanking.or.kr"
 OPENBANK_REDIRECT_URI = "http://localhost:5050/auth/callback/"
 OPENBANK_TOKEN_URL = f"{OPENBANK_DOMAIN}/oauth/2.0/token"
+ACCOUNTINFO_REDIRECT_URI = "http://localhost:5050/accountinfo/identification/callback/"
 accountinfo_api_tran_id = os.getenv("accountinfo_api_tran_id")
 accountinfo_list_num = os.getenv("accountinfo_list_num")
 
@@ -96,7 +97,7 @@ def auth_callback():
     user_access_token = token_data['access_token']
     token_data['code'] = code
     with open('사용자_토큰_정보.json', 'w', encoding='utf-8') as f:
-      f.write(json.dumps(token_data))
+      f.write(json.dumps(token_data, indent=4))
       f.close()
   print(f'====== user_seq_no : {user_seq_no}')
   print(f'====== user_access_token : {user_access_token}')
@@ -116,7 +117,7 @@ def auth_callback():
     print('자체인증 이용기관 토큰발급 (2-legged) :', token_data)
     org_access_token = token_data['access_token']
     with open('자체인증_이용기관_토큰_정보.json', 'w', encoding='utf-8') as f:
-      f.write(json.dumps(token_data))
+      f.write(json.dumps(token_data, indent=4))
       f.close()
   print(f'====== org_access_token : {org_access_token}')
 
@@ -181,7 +182,7 @@ def set_user_data(access_token, register_account_num, register_account_seq,
     print('사용자 정보 :', user_data)
     if user_data and user_data['user_ci']:
       with open('사용자_정보.json', 'w', encoding='utf-8') as f:
-        f.write(json.dumps(user_data))
+        f.write(json.dumps(user_data, indent=4))
         f.close()
   
   return user_data
@@ -208,7 +209,7 @@ def get_user_data(access_token, user_seq_no):
         user_data['res_cnt'] = 1
         del user_data['res_list'][1:]
       with open('사용자_정보.json', 'w', encoding='utf-8') as f:
-        f.write(json.dumps(user_data))
+        f.write(json.dumps(user_data, indent=4))
         f.close()
   return user_data
 

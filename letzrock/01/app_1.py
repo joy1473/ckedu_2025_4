@@ -5,9 +5,8 @@ import requests
 import os
 from dotenv import load_dotenv
 import logging
-from datetime import datetime
-import secrets
-import string
+from pymongo import MongoClient
+from api_utils import format_datetime
 
 # Logger 설정
 logging.basicConfig(
@@ -18,8 +17,8 @@ logging.basicConfig(
 logger = logging.getLogger()
 stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
-log_file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), 'logs/app_1.log'))
-logger.debug(f"log_file_name={log_file_name}")
+log_file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), f'logs/app_1_{format_datetime('%Y%m%d')}.log'))
+#logger.debug(f"log_file_name={log_file_name}")
 file_handler = logging.FileHandler(filename=log_file_name)
 logger.addHandler(file_handler)
 
@@ -39,34 +38,81 @@ OPENBANK_REDIRECT_URI = "http://localhost:5050/auth/callback/"
 OPENBANK_TOKEN_URL = f"{OPENBANK_DOMAIN}/oauth/2.0/token"
 #accountinfo_api_tran_id = os.getenv("accountinfo_api_tran_id")
 #accountinfo_list_num = os.getenv("accountinfo_list_num")
+MONGO_URI = os.getenv('MONGO_URI')
+
+user_data = {}
 
 def get_user_info(in_user_id: str):
-  """사용자 정보 반환 : MongoDB 연결 필요
+  """
+  사용자 정보 반환 : MongoDB 연결 필요
   
   Args:
     in_user_id (str): 사용자ID (필수)
   
   Returns:
     out_code (str): 인증시 받은 코드
-    out_access_token (str): 오픈뱅킹 발급 토큰
-    out_user_name (str): 오픈뱅킹 발급 토큰
+    out_login_access_token (str): 오픈뱅킹 발급 토큰 (scope = login)
+    out_org_access_token (str): 오픈뱅킹 발급 토큰 (scope = oob)
+    out_user_name (str): 이름
+    out_user_ci (str): 사용자 CI(Connect Info)
+    out_user_email (str): 이메일주소
     out_user_seq_no (str): 오픈뱅킹 사용자일련번호
+    out_auth_code (str): 어카운트인포 계좌통합조회에 필요한 키
   """
   logger.debug('*** get_check ***')
   logger.debug(f'in_user_id:{in_user_id}')
+  
   out_code = ''
   out_user_name = ''
+  out_user_ci = ''
+  out_user_email = ''
   out_user_seq_no = ''
-  out_access_token = ''
+  out_login_access_token = ''
+  out_org_access_token = ''
+  out_auth_code = ''
+
+  if in_user_id in user_data:
+    out_code = user_data[in_user_id]['code']
+    out_login_access_token = user_data[in_user_id]['login_access_token']
+    out_org_access_token = user_data[in_user_id]['org_access_token']
+    out_user_name = user_data[in_user_id]['user_name']
+    out_user_ci = user_data[in_user_id]['user_ci']
+    out_user_email = user_data[in_user_id]['user_email']
+    out_user_seq_no = user_data[in_user_id]['user_seq_no']
+    out_auth_code = user_data[in_user_id]['auth_code']
+  else:
+    pass
+    # client = MongoClient(
+    #   MONGO_URI, 
+    #   serverSelectionTimeoutMS=5000
+    # )
+    # try:
+    #   database = client.get_database("mock_trading_db")
+    #   movies = database.get_collection("users")
+    #   # Query for a movie that has the title 'Back to the Future'
+    #   query = { "title": "Back to the Future" }
+    #   movie = movies.find_one(query)
+    #   print(movie)
+    # except Exception as e:
+    #   raise Exception("Unable to find the document due to the following error: ", e)
+    # finally:
+    #   if client:
+    #     client.close()
+
   return {
     "out_code": out_code,
-    "out_access_token": out_access_token,
+    "out_login_access_token": out_login_access_token,
+    "out_org_access_token": out_org_access_token,
     "out_user_name": out_user_name,
-    "out_user_seq_no": out_user_seq_no
+    "out_user_ci": out_user_ci,
+    "out_user_email": out_user_email,
+    "out_user_seq_no": out_user_seq_no,
+    "out_auth_code": out_auth_code
   }
 
 def get_account_list(in_user_id: str, in_sort_order_descending: bool | None = True):
-  """오픈뱅킹 등록계좌조회
+  """
+  오픈뱅킹 등록계좌조회
   
   Args:
     in_user_id (str): 사용자ID (필수)
@@ -92,7 +138,7 @@ def get_account_list(in_user_id: str, in_sort_order_descending: bool | None = Tr
   
   # 사용자 정보 조회
   user_data = get_user_info(in_user_id)
-  access_token = user_data['out_access_token']
+  access_token = user_data['out_login_access_token']
   user_seq_no = user_data['out_user_seq_no']
   logger.debug(f'access_token:{access_token}')
   logger.debug(f'user_seq_no:{user_seq_no}')
@@ -129,7 +175,8 @@ def get_account_list(in_user_id: str, in_sort_order_descending: bool | None = Tr
   return result_data
 
 def get_accountinfo_list(in_user_id: str, in_inquiry_bank_type: str, in_trace_no: str, in_inquiry_record_cnt: str):
-  """오픈뱅킹 계좌통합조회
+  """
+  어카운트인포 계좌통합조회
   
   Args:
     in_user_id (str): 사용자ID (필수)
@@ -159,8 +206,8 @@ def get_accountinfo_list(in_user_id: str, in_inquiry_bank_type: str, in_trace_no
   
   # 사용자 정보 조회
   user_data = get_user_info(in_user_id)
-  access_token = user_data['out_access_token']
-  auth_code = user_data['out_code']
+  access_token = user_data['out_org_access_token']
+  auth_code = user_data['out_auth_code']
   logger.debug(f'access_token:{access_token}')
   logger.debug(f'auth_code:{auth_code}')
 
@@ -189,7 +236,8 @@ def get_accountinfo_list(in_user_id: str, in_inquiry_bank_type: str, in_trace_no
 
 def get_account_balance(in_user_id: str, 
                         in_bank_tran_id: str, in_bank_code_std: str, in_account_num: str):
-  """오픈뱅킹 잔액조회
+  """
+  오픈뱅킹 잔액조회
   
   Args:
     in_user_id (str): 사용자ID (필수)
@@ -218,7 +266,7 @@ def get_account_balance(in_user_id: str,
   
   # 사용자 정보 조회
   user_data = get_user_info(in_user_id)
-  access_token = user_data['out_access_token']
+  access_token = user_data['out_login_access_token']
   user_seq_no = user_data['out_user_seq_no']
   logger.debug(f'access_token:{access_token}')
   logger.debug(f'user_seq_no:{user_seq_no}')
@@ -265,7 +313,8 @@ async def get_transaction_list(in_user_id: str, in_bank_tran_id: str, in_bank_co
                                in_from_date: str, in_to_date: str, 
                                in_befor_inquiry_trace_info: str | None = None,
                                in_sort_order_descending: bool | None = True):
-  """오픈뱅킹 거래내역조회
+  """
+  오픈뱅킹 거래내역조회
   
   Args:
     in_user_id (str): 사용자ID (필수)
@@ -307,7 +356,7 @@ async def get_transaction_list(in_user_id: str, in_bank_tran_id: str, in_bank_co
   
   # 사용자 정보 조회
   user_data = get_user_info(in_user_id)
-  access_token = user_data['out_access_token']
+  access_token = user_data['out_login_access_token']
   user_seq_no = user_data['out_user_seq_no']
   logger.debug(f'access_token:{access_token}')
   logger.debug(f'user_seq_no:{user_seq_no}')
@@ -371,9 +420,10 @@ async def get_transaction_list(in_user_id: str, in_bank_tran_id: str, in_bank_co
 
   return result_data
 
-def get_account_balance(in_user_id: str, in_bank_tran_id: str, in_bank_code_std: str, 
+def get_inquiry_real_name(in_user_id: str, in_bank_tran_id: str, in_bank_code_std: str, 
                         in_account_num: str, in_account_holder_info_type: str):
-  """오픈뱅킹 계좌실명조회
+  """
+  오픈뱅킹 계좌실명조회
   
   Args:
     in_user_id (str): 사용자ID (필수)
@@ -400,7 +450,7 @@ def get_account_balance(in_user_id: str, in_bank_tran_id: str, in_bank_code_std:
     out_account_holder_name (str(20)): 예금주성명
     out_account_type (str(1)): 계좌종류 (“1”:수시입출금, “2”:예적금, “6”:수익증권, “T”:종합계좌)
   """
-  logger.debug('*** get_account_balance ***')
+  logger.debug('*** get_inquiry_real_name ***')
   logger.debug(f'in_user_id:{in_user_id}')
   logger.debug(f'in_bank_tran_id::{in_bank_tran_id:}')
   logger.debug(f'in_bank_code_std:{in_bank_code_std}')
@@ -417,7 +467,7 @@ def get_account_balance(in_user_id: str, in_bank_tran_id: str, in_bank_code_std:
   
   # 사용자 정보 조회
   user_data = get_user_info(in_user_id)
-  access_token = user_data['out_access_token']
+  access_token = user_data['out_login_access_token']
   user_seq_no = user_data['out_user_seq_no']
   logger.debug(f'access_token:{access_token}')
   logger.debug(f'user_seq_no:{user_seq_no}')
@@ -460,7 +510,8 @@ def get_account_balance(in_user_id: str, in_bank_tran_id: str, in_bank_code_std:
   return result_data
   
 def get_account_cancel(in_user_id: str, in_bank_tran_id: str):
-  """오픈뱅킹 계좌해지
+  """
+  오픈뱅킹 계좌해지
   
   Args:
   # in_user_id (str): 사용자ID (옵션)
@@ -481,7 +532,7 @@ def get_account_cancel(in_user_id: str, in_bank_tran_id: str):
   
   # 사용자 정보 조회
   user_data = get_user_info(in_user_id)
-  access_token = user_data['out_access_token']
+  access_token = user_data['out_login_access_token']
   user_seq_no = user_data['out_user_seq_no']
   logger.debug(f'access_token:{access_token}')
   logger.debug(f'user_seq_no:{user_seq_no}')
@@ -499,7 +550,8 @@ def get_account_cancel(in_user_id: str, in_bank_tran_id: str):
   return result_data
 
 def private_auth_account_cancel(in_user_id: str, in_bank_tran_id: str, in_scope: str):
-  """오픈뱅킹 계좌해지를 요청 처리
+  """
+  오픈뱅킹 계좌해지 요청 처리
 
   Args:
     in_user_id (str): 사용자ID (필수)
@@ -519,7 +571,7 @@ def private_auth_account_cancel(in_user_id: str, in_bank_tran_id: str, in_scope:
   
   # 사용자 정보 조회
   user_data = get_user_info(in_user_id)
-  access_token = user_data['out_access_token']
+  access_token = user_data['out_login_access_token']
   user_seq_no = user_data['out_user_seq_no']
   logger.debug(f'access_token:{access_token}')
   logger.debug(f'user_seq_no:{user_seq_no}')
@@ -545,8 +597,7 @@ def private_auth_account_cancel(in_user_id: str, in_bank_tran_id: str, in_scope:
     "bank_tran_id": in_bank_tran_id,
     "scope": in_scope
   }
-  
-  
+
   url = f"{OPENBANK_DOMAIN}/v2.0/account/cancel"
   response = requests.post(url, data=params, headers=headers)
   
@@ -572,30 +623,3 @@ def private_auth_account_cancel(in_user_id: str, in_bank_tran_id: str, in_scope:
   
   return result_data
 
-def format_datetime(format: str | None):
-  """현재 날짜를 형식에 맞춰 문자로 반환  
-  
-  Args:
-    format (str): 날짜 형식
-  
-  Returns:
-    strftime (str): 날짜
-  """
-  if not format:
-    format = '%Y%m%d%H%M%S'
-  now = datetime.now()
-  return now.strftime(format=format)
-
-def generate_secure_key(length=12):
-  """안전한 랜덤 키 생성 함수 (문자 포함)
-  
-  Args:
-    length (nt): 문자 길이
-  
-  Returns:
-    random_key (str): 랜덤 키
-  """
-  # 랜덤 문자열 생성 (문자, 숫자, 특수문자 포함)
-  alphabet = string.ascii_letters + string.digits
-  random_key = ''.join(secrets.choice(alphabet) for i in range(length))
-  return random_key
