@@ -47,14 +47,20 @@ class KoreaInvestmentAPI():
     """
     내부 공통 요청 처리 함수
     """
-    
+    logger.debug(f'method = {method}')
     full_url = f"{self.base_url}{url}"
     logger.debug(headers)
     logger.debug(params)
-    logger.debug(full_url)
     if method.upper() == 'POST':
+      logger.debug(full_url)
       response = requests.post(full_url, data=json.dumps(params), headers=headers)
     else:
+      # logger.debug(f'len(params.keys()) = {len(params.keys())}')
+      # if params and len(params.keys()) > 0:
+      #   query_string = "&".join([f"{k}={v}" for k, v in params.items()])
+      #   logger.debug(query_string)
+      #   full_url += "?" + query_string
+      logger.debug(full_url)
       response = requests.get(full_url, params=params, headers=headers)
     response.raise_for_status()
     logger.debug(f"status_code : {response.status_code}")
@@ -521,15 +527,16 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-004',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
       'CTX_AREA_NK100': in_CTX_AREA_NK100,
       'INQR_DVSN_1': in_INQR_DVSN_1,
       'INQR_DVSN_2': in_INQR_DVSN_2,
-      'api-id': 'v1_국내주식-004',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/inquire-psbl-rvsecncl'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -686,6 +693,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-005',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'INQR_STRT_DT': in_INQR_STRT_DT,
@@ -701,9 +711,7 @@ class KoreaInvestmentAPI():
       'EXCG_ID_DVSN_CD': in_EXCG_ID_DVSN_CD,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
       'CTX_AREA_NK100': in_CTX_AREA_NK100,
-      'api-id': 'v1_국내주식-005',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/inquire-daily-ccld'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -885,6 +893,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-006',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'AFHR_FLPR_YN': in_AFHR_FLPR_YN,
@@ -896,9 +907,7 @@ class KoreaInvestmentAPI():
       'PRCS_DVSN': in_PRCS_DVSN,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
       'CTX_AREA_NK100': in_CTX_AREA_NK100,
-      'api-id': 'v1_국내주식-006',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/inquire-balance'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -1054,6 +1063,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-007',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'PDNO': in_PDNO,
@@ -1061,9 +1073,7 @@ class KoreaInvestmentAPI():
       'ORD_DVSN': in_ORD_DVSN,
       'CMA_EVLU_AMT_ICLD_YN': in_CMA_EVLU_AMT_ICLD_YN,
       'OVRS_ICLD_YN': in_OVRS_ICLD_YN,
-      'api-id': 'v1_국내주식-007',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/inquire-psbl-order'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -1166,12 +1176,13 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': '국내주식-165',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'PDNO': in_PDNO,
-      'api-id': '국내주식-165',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/inquire-psbl-sell'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -1277,6 +1288,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-042',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'PDNO': in_PDNO,
@@ -1285,9 +1299,7 @@ class KoreaInvestmentAPI():
       'CRDT_TYPE': in_CRDT_TYPE,
       'CMA_EVLU_AMT_ICLD_YN': in_CMA_EVLU_AMT_ICLD_YN,
       'OVRS_ICLD_YN': in_OVRS_ICLD_YN,
-      'api-id': 'v1_국내주식-042',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/inquire-credit-psamount'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -1622,6 +1634,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-020',
+    }
+    params = {
       'RSVN_ORD_ORD_DT': in_RSVN_ORD_ORD_DT,
       'RSVN_ORD_END_DT': in_RSVN_ORD_END_DT,
       'RSVN_ORD_SEQ': in_RSVN_ORD_SEQ,
@@ -1634,9 +1649,7 @@ class KoreaInvestmentAPI():
       'SLL_BUY_DVSN_CD': in_SLL_BUY_DVSN_CD,
       'CTX_AREA_FK200': in_CTX_AREA_FK200,
       'CTX_AREA_NK200': in_CTX_AREA_NK200,
-      'api-id': 'v1_국내주식-020',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/order-resv-ccnl'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -1757,14 +1770,14 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
-      'CANO': in_CANO,
+      'api-id': 'v1_국내주식-032',
+    }
+    params = {
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'USER_DVSN_CD': in_USER_DVSN_CD,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
       'CTX_AREA_NK100': in_CTX_AREA_NK100,
-      'api-id': 'v1_국내주식-032',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/pension/inquire-present-balance'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -1885,6 +1898,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-033',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'USER_DVSN_CD': in_USER_DVSN_CD,
@@ -1893,9 +1909,7 @@ class KoreaInvestmentAPI():
       'INQR_DVSN_3': in_INQR_DVSN_3,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
       'CTX_AREA_NK100': in_CTX_AREA_NK100,
-      'api-id': 'v1_국내주식-033',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/pension/inquire-daily-ccld'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -2000,6 +2014,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-034',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'PDNO': in_PDNO,
@@ -2007,9 +2024,7 @@ class KoreaInvestmentAPI():
       'CMA_EVLU_AMT_ICLD_YN': in_CMA_EVLU_AMT_ICLD_YN,
       'ORD_DVSN': in_ORD_DVSN,
       'ORD_UNPR': in_ORD_UNPR,
-      'api-id': 'v1_국내주식-034',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/pension/inquire-psbl-order'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -2094,12 +2109,13 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-035',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'ACCA_DVSN_CD': in_ACCA_DVSN_CD,
-      'api-id': 'v1_국내주식-035',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/pension/inquire-deposit'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -2206,15 +2222,16 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-036',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'ACCA_DVSN_CD': in_ACCA_DVSN_CD,
       'INQR_DVSN': in_INQR_DVSN,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
       'CTX_AREA_NK100': in_CTX_AREA_NK100,
-      'api-id': 'v1_국내주식-036',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/pension/inquire-balance'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -2375,6 +2392,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-041',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'AFHR_FLPR_YN': in_AFHR_FLPR_YN,
@@ -2387,9 +2407,7 @@ class KoreaInvestmentAPI():
       'COST_ICLD_YN': in_COST_ICLD_YN,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
       'CTX_AREA_NK100': in_CTX_AREA_NK100,
-      'api-id': 'v1_국내주식-041',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/inquire-balance-rlz-pl'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -2550,13 +2568,14 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-048',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'INQR_DVSN_1': in_INQR_DVSN_1,
       'BSPR_BF_DT_APLY_YN': in_BSPR_BF_DT_APLY_YN,
-      'api-id': 'v1_국내주식-048',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/inquire-account-balance'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -2699,6 +2718,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-052',
+    }
+    params = {
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'CANO': in_CANO,
       'INQR_STRT_DT': in_INQR_STRT_DT,
@@ -2709,9 +2731,7 @@ class KoreaInvestmentAPI():
       'INQR_DVSN': in_INQR_DVSN,
       'CBLC_DVSN': in_CBLC_DVSN,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
-      'api-id': 'v1_국내주식-052',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/inquire-period-profit'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -2859,6 +2879,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': 'v1_국내주식-060',
+    }
+    params = {
       'CANO': in_CANO,
       'SORT_DVSN': in_SORT_DVSN,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
@@ -2868,9 +2891,7 @@ class KoreaInvestmentAPI():
       'CTX_AREA_NK100': in_CTX_AREA_NK100,
       'CBLC_DVSN': in_CBLC_DVSN,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
-      'api-id': 'v1_국내주식-060',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/inquire-period-trade-profit'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -3092,14 +3113,15 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': '국내주식-191',
+    }
+    params = {
       'CANO': in_CANO,
       'ACNT_PRDT_CD': in_ACNT_PRDT_CD,
       'CMA_EVLU_AMT_ICLD_YN': in_CMA_EVLU_AMT_ICLD_YN,
       'WCRC_FRCR_DVSN_CD': in_WCRC_FRCR_DVSN_CD,
       'FWEX_CTRT_FRCR_DVSN_CD': in_FWEX_CTRT_FRCR_DVSN_CD,
-      'api-id': '국내주식-191',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/intgr-margin'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
@@ -3317,6 +3339,9 @@ class KoreaInvestmentAPI():
       'phone_number': in_phone_number,
       'ip_addr': in_ip_addr,
       'gt_uid': in_gt_uid,
+      'api-id': '국내주식-211',
+    }
+    params = {
       'INQR_DVSN': in_INQR_DVSN,
       'CUST_RNCNO25': in_CUST_RNCNO25,
       'HMID': in_HMID,
@@ -3329,9 +3354,7 @@ class KoreaInvestmentAPI():
       'PRDT_TYPE_CD': in_PRDT_TYPE_CD,
       'CTX_AREA_NK100': in_CTX_AREA_NK100,
       'CTX_AREA_FK100': in_CTX_AREA_FK100,
-      'api-id': '국내주식-211',
     }
-    params = {}
     url = '/uapi/domestic-stock/v1/trading/period-rights'
     
     header_data, out_data = self._send_request(url, 'GET', params, headers)
