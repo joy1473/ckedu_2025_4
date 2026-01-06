@@ -16,7 +16,29 @@ from fastapi.responses import HTMLResponse
 import numpy as np
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
+from elasticsearch import Elasticsearch
+from fastapi import Response
 
+# 엘라스틱서치 연결 설정
+# es = Elasticsearch(["http://127.0.0.1:9200"], verify_certs=False)
+# es = Elasticsearch(
+#     ["http://localhost:9200"],
+#     # 버전 호환성 에러(version 9 관련) 해결을 위한 헤더 추가
+#     headers={"Accept": "application/vnd.elasticsearch+json; compatible-with=7"},
+#     verify_certs=False
+# )
+
+# es = Elasticsearch(
+#     ["http://127.0.0.1:9200"],
+#     headers={"Accept": "application/vnd.elasticsearch+json; compatible-with=7"},
+#     verify_certs=False
+# )
+
+es = Elasticsearch(
+    ["http://172.26.117.88:9200"],  # localhost 대신 확인된 WSL IP 입력
+    headers={"Accept": "application/vnd.elasticsearch+json; compatible-with=7"},
+    verify_certs=False
+)
 # .env 설정
 BASE_DIR_ESC = Path(__file__).resolve().parent.parent.parent
 ENV_PATH_ESC = BASE_DIR_ESC / '.env'
@@ -506,54 +528,58 @@ async def initEsc(in_userId: str = Query(None), in_phone: str = Query(...)):
 @APP_ESC.get("/apiEsc/popup-status")
 async def get_popup_status(in_userId: str = Query(...)):
     """
-    # 설명 : 모의투자-수익률 팝업용 데이터 제공
-    # 입력 : in_userId-사용자id
-    # 출력 : response-모의투자 성공사례 자산분석 리스트 팝업
+    # 설명 : 모의투자-수익률 팝업용 데이터 제공 (Elasticsearch 연동 버전)
+    # 입력 : in_userId - 사용자id
+    # 출력 : response - 엘라스틱서치 trade_esc_history 기반 자산 분석 리스트
     """
-    # 1. 파일 경로 확인
-    json_path = os.path.join(CURRENT_DIR_ESC, "trading_data_esc.json")
-    print(f"🔍 JSON 경로 확인: {json_path}") # 서버 터미널에서 경로가 맞는지 확인용
-    
     try:
-        if os.path.exists(json_path):
-            with open(json_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            
-            processed_data = []
-            for item in data:
-                # 🟢 [핵심 수정] ticker나 code 중 하나만 있어도 작동하게 함
-                ticker = item.get('code') or item.get('ticker')
-                if not ticker:
-                    continue # 둘 다 없으면 스킵
-                
-                # 실시간 가격 정보 호출 (실패 시 원본 가격 사용)
-                try:
-                    curr = get_stock_info_esc(ticker)
-                except:
-                    curr = None
-                
-                # 프론트엔드가 요구하는 필드명으로 통일
+        index_name = "trade_esc_history"
+        
+        # 1위 유저 식별
+        top_res = es.search(index=index_name, body={
+            "size": 1,
+            "query": {"exists": {"field": "rate"}},
+            "sort": [{"rate": {"order": "desc"}}]
+        })
+        if not top_res['hits']['hits']: return []
+        target_uid = top_res['hits']['hits'][0]['_source'].get('uid')
+
+        # 해당 유저의 모든 데이터 가져오기
+        res = es.search(index=index_name, body={
+            "size": 500,
+            "query": { "match_phrase": { "uid": target_uid } }
+        })
+        
+        user_hits = res['hits']['hits']
+        processed_data = []
+
+        for h in user_hits:
+            s = h['_source']
+            try:
+                # 모든 수치형 데이터에 대해 None 체크 수행
+                buy_p = s.get('buy_p')
+                sell_p = s.get('sell_p')
+                rate = s.get('rate')
+                qty = s.get('qty')
+
                 processed_data.append({
-                    "date": item.get('date', '-'),
-                    "name": item.get('name', '종목명 없음'),
-                    "ticker": ticker,
-                    "code": ticker,
-                    # JSON의 buyPrice를 우선순위로, 없으면 price 사용
-                    "buyPrice": item.get('buyPrice') or item.get('price') or 0,
-                    # JSON의 quantity를 우선순위로, 없으면 qty 사용
-                    "quantity": item.get('quantity') or item.get('qty') or 0,
-                    "currentPrice": curr if curr else (item.get('currentPrice') or item.get('price') or 0)
+                    "date": s.get('buy_dt', '2025-01-01'),
+                    "name": s.get('sn', '알 수 없음'),
+                    "ticker": s.get('ticker', '005930.KS'),
+                    "code": s.get('ticker', '005930.KS'),
+                    "buyPrice": float(buy_p) if buy_p is not None else 0.0,
+                    "quantity": int(qty) if qty is not None else 0,
+                    "currentPrice": float(sell_p) if sell_p is not None else (float(buy_p) if buy_p is not None else 0.0),
+                    "returnRate": float(rate) if rate is not None else 0.0
                 })
-            
-            print(f"✅ 전송 데이터 개수: {len(processed_data)}")
-            return processed_data
-            
-        else:
-            print(f"❌ 파일을 찾을 수 없음: {json_path}")
-            return []
-            
+            except (ValueError, TypeError):
+                continue
+
+        print(f"✅ [DEBUG] {target_uid} 유저의 데이터 {len(processed_data)}건 가공 완료")
+        return processed_data
+
     except Exception as e:
-        print(f"❌ 백엔드 처리 중 에러 발생: {e}")
+        print(f"🔥 팝업 상태 API 에러: {e}")
         return []
     
 # 2. 특정 종목의 과거 차트 데이터 가져오기 (Plotly용)
@@ -568,7 +594,8 @@ async def get_stock_chart_data(in_code: str = Query(...)):
         # 매수 시점 전후의 데이터를 보여주기 위해 기간 설정
         stock = yf.Ticker(in_code)
         # 성공 사례가 3월이므로 2024년 전체 데이터를 가져오거나 최근 1년치를 가져옴
-        df = stock.history(start="2024-01-01", end="2024-12-31")
+        # df = stock.history(start="2024-01-01", end="2024-12-31")
+        df = stock.history(period="1y") # 고정 날짜 대신 최근 1년치 데이터 가져오기
         
         if df.empty:
             return {"error": "데이터가 없습니다."}
@@ -655,3 +682,69 @@ async def get_test_page():
     # 여기서는 간단하게 위 html 코드를 그대로 반환한다고 가정합니다.
     with open(os.path.join(CURRENT_DIR_ESC, "static", "test.html"), "r", encoding="utf-8") as f:
         return f.read()
+    
+@APP_ESC.get("/apiEsc/total-rank-top1")
+async def get_total_rank_top1(response: Response, t: str = Query(None)):
+    """
+    # 설명 : get_total_rank_top1 - ES 집계를 이용한 전체 수익금 1위 조회
+    # 입력 : response (FastAPI Response 객체), t (캐시 방지용 타임스탬프)
+    # 출력 : top_user 정보 (ID, 이름, 총수익금)
+    # 소스 : Elasticsearch trade_esc_history 인덱스
+    """
+    # 캐시 방지 헤더 설정
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+
+    try:
+        # trade_summary 인덱스를 사용하여 실시간 자산 가치 계산
+        body = {
+            "size": 0,
+            "aggs": {
+                "top_earner": {
+                    "terms": {
+                        "field": "user_id", # .keyword가 필요하면 user_id.keyword
+                        "size": 1,
+                        "order": { "total_valuation": "desc" }
+                    },
+                    "aggs": {
+                        "total_valuation": {
+                            "sum": {
+                                "script": {
+                                    # 실현손익(매도-매수) + 평가손익(보유량 * 현재가)
+                                    "source": """
+                                        double realized = doc['total_sell_amt'].value - doc['total_buy_amt'].value;
+                                        double hold_qty = doc['total_buy_qty'].value - doc['total_sell_qty'].value;
+                                        return realized + (hold_qty * doc['current_price'].value);
+                                    """
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        # trade_summary 인덱스에서 조회 (기존 history 인덱스보다 훨씬 정확함)
+        res = es.search(index="trade_summary", body=body)
+        buckets = res.get('aggregations', {}).get('top_earner', {}).get('buckets', [])
+        
+        if buckets:
+            top_user = buckets[0]
+            u_id = top_user['key']
+            # 원금 10억을 더해서 노출할지, 순수익만 노출할지 결정하세요. 
+            # 여기서는 '순수익'만 일단 계산합니다.
+            u_profit = top_user['total_valuation']['value'] 
+            
+            print(f"📡 [RANKING] 실시간 1위 추출: {u_id}, 총수익: {u_profit}")
+
+            return {
+                "error": False,
+                "user_id": u_id,
+                "user_name": u_id, # 이름 필드가 따로 없다면 ID로 대체
+                "total_profit": int(u_profit) # 가독성을 위해 정수화
+            }
+        else:
+            return {"error": True, "message": "No users found."}
+
+    except Exception as e:
+        print(f"❌ [RANKING ERROR] {str(e)}")
+        return {"error": True, "message": str(e)}
