@@ -1,0 +1,22 @@
+# 1. 보안 및 설정 파일 (가장 중요)
+.env
+
+# 2. 파이썬 가상환경 및 라이브러리
+venv/
+.venv/
+env/
+bin/
+lib/
+
+# 3. 파이썬 컴파일 및 캐시 파일
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 4. 에디터 설정 (VS Code, PyCharm 등)
+.vscode/
+.idea/
+
+# 5. 기타 시스템 파일
+.DS_Store
+Thumbs.db
