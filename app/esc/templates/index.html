@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AI 주식 챗봇 - ESC 모의투자</title>
+    <style>
+        body { 
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                        url('https://images.unsplash.com/photo-1611974717482-583196da346a?auto=format&fit=crop&q=80&w=2070');
+            background-size: cover; background-position: center;
+            font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; 
+        }
+        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 85%; padding: 12px 18px; border-radius: 15px; font-size: 14px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .user-msg { align-self: flex-end; background-color: #007bff; color: white; border-bottom-right-radius: 2px; }
+        .ai-msg { align-self: flex-start; background-color: rgba(255, 255, 255, 0.95); color: #333; border-bottom-left-radius: 2px; }
+
+        .user-info-bar { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(5px); padding: 10px 20px; display: flex; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.2); color: white; align-items: center; }
+        .user-info-bar input { background: rgba(255,255,255,0.9); border: none; padding: 6px 10px; border-radius: 4px; width: 130px; font-weight: bold; }
+
+        .input-area { padding: 20px; background: rgba(255, 255, 255, 0.95); display: flex; gap: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        input#user-input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+        /* 팝업 스타일 */
+        
+        #stockModal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.5);
+        }
+        /* 테이블을 감싸는 스크롤 영역 */
+        .modal-scroll-area {
+            width: 100%;
+            max-height: 400px; /* 여기서 높이를 제한합니다 */
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #eee;
+        }
+        /* 팝업 헤더 */
+        #stockModal h3 {
+            background: #2c3e50;
+            color: white;
+            margin: -20px -20px 15px -20px;
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            font-size: 18px;
+        }
+        .modal-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; /* 셀 너비를 고정하여 글자 겹침 방지 */
+        }
+
+        .modal-table th {
+            position: sticky; /* 스크롤 내려도 헤더 고정 */
+            top: 0;
+            background: #f8f9fa;
+            padding: 12px 5px;
+            font-size: 13px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        /* 테이블 폰트 및 정렬 */
+        .modal-table td {
+            padding: 12px 5px;
+            font-family: 'Malgun Gothic', sans-serif;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; }
+        /* 수익/손실 강조 */
+        .up { color: #d60000 !important; }   /* 한국 증권사 스타일 빨간색 */
+        .down { color: #0051c7 !important; } /* 한국 증권사 스타일 파란색 */
+        /* 하단 요약 박스 */
+        #totalSummary {
+            background: #fdfdfd;
+            border: 2px solid #2c3e50 !important;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+        }
+
+        #totalSummary span { color: #555; font-weight: bold; }
+        /* 로딩 애니메이션 */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 테이블 행 호버 효과 */
+        #modalContent tr:hover {
+            background-color: #f1f8ff !important;
+            transition: 0.2s;
+        }
+
+        /* 스크롤바 디자인 */
+        .modal-scroll-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-scroll-area::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="stylesheet" href="/static/popup.css">
+    <script src="/static/popup.js"></script>
+</head>
+<body>
+
+<div class="user-info-bar">
+    <div>👤 성함: <input type="text" id="user_name" readonly></div>    
+    <div>📱 연락처: <input type="text" id="phone" value="010-1234-5678"></div>
+    <div>💰 투자금: <input type="number" id="invest_amount" value="10000000"></div>
+</div>
+
+<div id="chat-window"></div>
+
+<div class="input-area">
+    <input type="text" id="user-input" placeholder="주식 매수/매도 또는 잔고 확인을 요청하세요..." onkeypress="if(event.keyCode==13) sendMessage()">
+    <button onclick="sendMessage()">전송</button>
+</div>
+
+<script>
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const text = input.value;
+        if (!text) return;
+
+        const userName = document.getElementById('user_name').value;
+        const chatWindow = document.getElementById('chat-window');
+        
+        chatWindow.innerHTML += `<div class="message user-msg">${text}</div>`;
+        input.value = '';
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+
+        const formData = new FormData();
+        formData.append('in_message', text);
+        formData.append('in_user_name', userName);
+
+        try {
+            const response = await fetch('/esc/chatEsc', { method: 'POST', body: formData });
+            const data = await response.json();
+            
+            const aiMsgDiv = document.createElement('div');
+            aiMsgDiv.className = 'message ai-msg';
+            aiMsgDiv.innerHTML = data.response; 
+
+            chatWindow.appendChild(aiMsgDiv);
+
+            const scripts = aiMsgDiv.getElementsByTagName('script');
+            for (let i = 0; i < scripts.length; i++) {
+                eval(scripts[i].innerText);
+            }
+        } catch (e) {
+            console.error("전송 오류:", e);
+        }
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // 초기화 및 팝업 실행 로직 통합 수정
+    window.onload = async function() {
+        const userNameInput = document.getElementById('user_name');
+        const phone = document.getElementById('phone').value;
+        
+        try {
+            // 1. 유저 초기화 호출
+            // 기존에 입력된 값이 없으면 서버에서 새로 생성함
+            const initRes = await fetch(`/esc/initEsc?userId=${encodeURIComponent(userNameInput.value)}&phone=${encodeURIComponent(phone)}`);
+            const initData = await initRes.json();
+            
+            if (initData.userId) {
+                // 2. 서버에서 받은 (혹은 확정된) userId를 즉시 입력 필드에 주입
+                userNameInput.value = initData.userId;
+                
+                // 3. 웰컴 메시지 출력
+                document.getElementById('chat-window').innerHTML += `<div class="message ai-msg">${initData.message.replace(/\n/g, '<br>')}</div>`;
+                // 💡 [변경] 외부 popup.js의 함수를 호출하여 화면에 그림
+                const summary = await getStockModalDOM(initData.userId);
+                console.log("계좌 요약 리턴값:", summary);
+            }
+        } catch (e) { 
+            console.warn("초기 로딩 실패", e); 
+        }
+    };
+
+</script>
+</body>
+</html>

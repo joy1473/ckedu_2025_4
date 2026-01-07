@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>모의투자 AI 주식 분석 및 주문 테스트</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <script src="/staticEsc/popup.js?v=1.0.2"></script>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; padding: 40px; text-align: center; background: #f1f5f9; color: #1e293b; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        h1 { font-size: 24px; margin-bottom: 10px; }
+        p { color: #64748b; margin-bottom: 30px; }
+        
+        .btn-report { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer; background: #1e293b; color: white; border: none; border-radius: 8px; margin-bottom: 25px; transition: background 0.2s; }
+        .btn-report:hover { background: #334155; }
+
+        .ai-section { border-top: 2px dashed #e2e8f0; padding-top: 25px; text-align: left; }
+        .ai-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .input-group { display: flex; gap: 8px; }
+        input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+        .btn-send { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        #aiResponseResult { margin-top: 15px; padding: 12px; border-radius: 6px; font-size: 13px; min-height: 40px; display: none; background: #f8fafc; border: 1px solid #e2e8f0; line-height: 1.5; }
+        
+        /* 모달이 들어갈 컨테이너 */
+        #modalContainer { position: relative; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📊 모의투자 AI 주식 관리 테스트</h1>
+        <p>분석 리포트 확인 및 AI 주문 기능을 테스트합니다.</p>
+        
+        <button class="btn-report" onclick="openAnalysisReport('user_0008')">
+            📈 'user_0008' 자산 분석 리포트 열기
+        </button>
+
+        <div class="ai-section">
+            <div class="ai-title">🤖 모의투자 AI 주식 주문 테스트</div>
+            <div class="input-group">
+                <input type="text" id="aiCommandInput" placeholder="'삼성전자 5주 매수해줘'">
+                <button class="btn-send" onclick="testAiCommand()">전송</button>
+            </div>
+            <div id="aiResponseResult"></div>
+        </div>
+    </div>
+
+    <div id="modalContainer"></div>
+
+    <script>
+        /**
+         * 팝업을 새 창으로 띄우는 대신, 
+         * 우리가 만든 popup.js의 getStockModalDOM을 실행하여 현재 창에 모달을 띄웁니다.
+         */
+        function openAnalysisReport(userId) {
+            // popup.js에 정의된 함수 호출
+            if (typeof getStockModalDOM === 'function') {
+                getStockModalDOM(userId);
+            } else {
+                console.error("popup.js가 로드되지 않았거나 함수를 찾을 수 없습니다.");
+            }
+        }
+
+        async function testAiCommand() {
+            const input = document.getElementById('aiCommandInput');
+            const resultDiv = document.getElementById('aiResponseResult');
+            const command = input.value.trim();
+            if (!command) return;
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = "⏳ AI 분석 중...";
+
+            try {
+                const formData = new FormData();
+                formData.append('in_message', command);
+                formData.append('in_user_id', 'user_0008'); 
+                formData.append('in_invest_amount', '10000000');
+
+                const response = await fetch('/esc/chatEsc', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.style.color = '#059669';
+                    resultDiv.innerHTML = `✅ <b>AI 응답:</b><br>${data.response}`;
+                }
+            } catch (error) {
+                resultDiv.style.color = '#dc2626';
+                resultDiv.innerHTML = `❌ 오류 발생`;
+            }
+        }
+    </script>
+</body>
+</html>
