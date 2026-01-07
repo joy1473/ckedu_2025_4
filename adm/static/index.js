@@ -58,7 +58,8 @@ $(() => {
         })
         .catch((err) => {
           if (console) console.error(err);
-          if (console) console.log('status : ' + err.response.status);
+          //if (console) console.log('status : ' + err.response.status);
+          //if (console) console.log(err.response);
           fnShowLogin();
         });
     } else {
@@ -209,8 +210,8 @@ $(() => {
         }
       })
       .catch((err) => {
-        //if (console) console.error(err);
-        //if (console) console.log(err.response);
+        if (console) console.error(err);
+        if (console) console.log(err.response);
         if (err.response && err.response.data && err.response.data.error) {
           alert(err.response.data.error);
         }
@@ -315,7 +316,7 @@ $(() => {
               'Authorization': `Bearer ${token}`,
             }
           };
-          const url = `${API}/change-passrod`;
+          const url = `${API}/change-password`;
           axios.post(url, params, config)
             .then((res) => {
               const data = res.data;
@@ -607,11 +608,11 @@ $(() => {
                         $('#root table tbody tr#row_' + user_id + ' td').eq(4).text(item["investment_grade"]);
                         item["risk_tolerance"] = persona_data_params["risk_tolerance"];
                         item["investment_style"] = persona_data_params["investment_style"];
-                        item["preferred_sectors"] = persona_data_params["preferred_sectors"];
+                        item["preferred_sectors"] = persona_data_params["preferred_sectors"].split(',');
                         item["holding_period"] = persona_data_params["holding_period"];
                         item["typical_behavior"] = persona_data_params["typical_behavior"];
-                        item["favorite_patterns"] = persona_data_params["favorite_patterns"];
-                        item["specific_stocks"] = persona_data_params["specific_stocks"];
+                        item["favorite_patterns"] = persona_data_params["favorite_patterns"].split(',');
+                        item["specific_stocks"] = persona_data_params["specific_stocks"].split(',');
                         item["analysis_tendency"] = persona_data_params["analysis_tendency"];
                         item["special_note"] = persona_data_params["special_note"];
                         item["lua_branch"] = persona_data_params["lua_branch"];

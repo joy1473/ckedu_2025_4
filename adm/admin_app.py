@@ -1,12 +1,17 @@
 # 관리자 : 사용자 성향 변경 / 학습 버튼
-from flask import Flask, render_template, request, jsonify, abort
-from flask_cors import CORS
-import atexit
+from fastapi import FastAPI, Request, HTTPException, Depends, Header, status
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from typing import Optional
 import os
 from dotenv import load_dotenv
 import logging
 from datetime import datetime
 
+from models import SignupRequest, LoginRequest, PasswordChangeRequest, PersonaDataRequest, PersonaRegisterRequest
 from db import DbUtils
 from auth import Auth
 
@@ -28,72 +33,41 @@ load_dotenv()
 # 서버 포트
 PORT = 8000
 
-app = Flask(__name__)
-CORS(app)
-
 CHECK_AUTH = 1
 auth = Auth()
 dbUtils = DbUtils()
 
-@app.route("/", methods=["GET"])
-def index():
-  return render_template('index.html')
+# Lifecycle 관리 (Startup/Shutdown)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+  """
+  Flask 앱 종료 시
+  - DB 접속 해제
+  """
+  # Startup: 필요한 경우 여기에 작성
+  yield
+  # Shutdown: DB 접속 해제
+  if dbUtils:
+    logger.debug("Shutting down: Disconnecting DB")
+    dbUtils.disconnect()
 
-# 관리자 회원가입
-@app.route("/signup", methods=["POST"])
-def signup():
-  logger.debug('========= 관리자 회원가입 =========')
-  params = request.get_json()
-  if not params:
-    return jsonify({"error": "No JSON data provided"}), 400
-  
-  try:
-    email = params.get('email').strip()
-    password = params.get('password').strip()
-    name = params.get('name').strip()
-    logger.debug(f'email : "{email}"')
-    logger.debug(f'password : "{password}"')
-    logger.debug(f'name : "{name}"')
+app = FastAPI(lifespan=lifespan)
+# CORS 설정
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=["*"],
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"],
+)
 
-    try:
-      token_data = dbUtils.set_adm_user_data(email, password, name)
-      return token_data
-    except Exception as e:
-      #print(f'$$$$$$$$$$$$$ {type(e.args[0])} $$$$$$$$$$$$$')
-      #print(e.args[0])
-      logger.debug(e)
-      return jsonify({"error": e.args[0]}), 400
-    
-  except Exception as e:
-    logger.debug(e)
-    return jsonify({"error": e.args[0]}), 500
+templates = Jinja2Templates(directory="templates")
+# 'static'이라는 이름의 디렉토리를 /static 경로로 마운트합니다.
+# 실제 폴더명(directory)이 'static'이어야 합니다.
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 관리자 로그인
-@app.route("/login", methods=["POST"])
-def login():
-  logger.debug('========= 관리자 로그인 =========')
-  params = request.get_json()
-  if not params:
-    return jsonify({"error": "No JSON data provided"}), 400
-  
-  try:
-    email = params.get('email').strip()
-    password = params.get('password').strip()
-    logger.debug(f'email : "{email}"')
-    logger.debug(f'password : "{password}"')
-
-    try:
-      token_data = dbUtils.get_adm_user_login(email, password)
-      return token_data
-    except Exception as e:
-      logger.debug(e)
-      return jsonify({"error": e.args[0]}), 400
-    
-  except Exception as e:
-    logger.debug(e)
-    return jsonify({"error": e.args[0]}), 500
-
-def verify_token():
+# 토큰 검증 의존성 함수
+def verify_token(authorization: Optional[str] = Header(None)):
   """
   토큰 검증 후 결과 반환
 
@@ -102,134 +76,113 @@ def verify_token():
     code
   """
   if CHECK_AUTH == 0:
-    return '', 200
+    return ''
+  
+  if not authorization or not authorization.startswith("Bearer "):
+    raise JSONResponse(status_code=403, content={"error": "Token is missing!"})
   
   try:
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-      return 'Token is missing!', 403
-    
-    token = auth_header.split(" ")[1]
+    token = authorization.split(" ")[1]
     payload = auth.decode_token(token)
-    if payload and payload["email"]:
-      return payload["email"], 200
+    if payload and "email" in payload:
+      return payload["email"]
     else:
-      return 'Token is invalid!', 403
+      raise JSONResponse(status_code=403, content={"error": "Token is invalid!"})
   except Exception:
-    return 'Token is invalid!', 403
+    raise JSONResponse(status_code=403, content={"error": "Token is invalid!"})
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+  return templates.TemplateResponse(request=request, name='index.html')
+
+# 관리자 회원가입
+@app.post("/signup")
+async def signup(data: SignupRequest):
+  logger.debug('========= 관리자 회원가입 =========')
+  try:
+    logger.debug(f'email : "{data.email}"')
+    logger.debug(f'password : "{data.password}"')
+    logger.debug(f'name : "{data.name}"')
+
+    token_data = dbUtils.set_adm_user_data(data.email, data.password, data.name)
+    return token_data
+    
+  except Exception as e:
+    logger.debug(e)
+    return JSONResponse(status_code=400, content={"error": str(e)})
+
+# 관리자 로그인
+@app.post("/login")
+async def login(data: LoginRequest):
+  logger.debug('========= 관리자 로그인 =========')
+  try:
+    logger.debug(f'email : "{data.email}"')
+    logger.debug(f'password : "{data.password}"')
+
+    token_data = dbUtils.get_adm_user_login(data.email, data.password)
+    return token_data
+    
+  except Exception as e:
+    logger.debug(e)
+    return JSONResponse(status_code=400, content={"error": str(e)})
 
 # 관리자 인증 정보
-@app.route("/me", methods=["POST"])
-def me():
-  message, code = verify_token()
-
-  if code == 200:
-    try:
-      admin_user = dbUtils.get_adm_user_data(message)
-      return jsonify(admin_user)
-    except Exception as e:
-      logger.debug(e)
-      return jsonify({"error": e.args[0]}), 403
-  else:
-    return jsonify({"error": message}), code
+@app.post("/me")
+async def me(current_user: str = Depends(verify_token)):
+  try:
+    admin_user = dbUtils.get_adm_user_data(current_user)
+    return admin_user
+  except Exception as e:
+    logger.debug(e)
+    raise JSONResponse(status_code=403, content={"error": str(e)})
 
 # 관리자 암호 변경
-@app.route("/change-password", methods=["POST"])
-def change_password():
-  message, code = verify_token()
+@app.post("/change-password")
+async def change_password(data: PasswordChangeRequest, current_user: str = Depends(verify_token)):
+  logger.debug('========= 관리자 암호 변경 =========')
+  try:
+    logger.debug(f'*** 현재 관리자 : {current_user}')
+    logger.debug(f'current_password : "{data.current_password}"')
+    logger.debug(f'new_password : "{data.new_password}"')
+    logger.debug(f'confirm_password : "{data.confirm_password}"')
+    if not data.current_password or not data.new_password:
+      raise JSONResponse(status_code=400, content={"error": "No data provided"})
+    if data.new_password != data.confirm_password:
+      return JSONResponse(status_code=400, content={"error": "새 암호와 새 암호 확인이 일치하지 않습니다."})
 
-  if code == 200:
-    logger.debug('========= 관리자 암호 변경 =========')
-    params = request.get_json()
-    if not params:
-      return jsonify({"error": "No JSON data provided"}), 400
-    
-    try:
-      logger.debug(f'*** 현재 관리자 : {message}')
-      current_password = params.get('current_password').strip()
-      new_password = params.get('new_password').strip()
-      confirm_password = params.get('confirm_password').strip()
-      logger.debug(f'current_password : "{current_password}"')
-      logger.debug(f'new_password : "{new_password}"')
-      logger.debug(f'confirm_password : "{confirm_password}"')
-      if current_password == '' or new_password == '':
-        return jsonify({"error": "No data provided"}), 400
-      if new_password != confirm_password:
-        return jsonify({"error": "새 암호와 새 암호 확인이 일치하지 않습니다."}), 400
-
-      try:
-        result = dbUtils.set_adm_user_password(message, current_password, new_password)
-        return jsonify({'result': 1 if result else 0})
-      except Exception as e:
-        logger.debug(e)
-        return jsonify({"error": e.args[0]}), 400
-      
-    except Exception as e:
-      logger.debug(e)
-      return jsonify({"error": e.args[0]}), 500
-  else:
-    return jsonify({"error": message}), code
+    result = dbUtils.set_adm_user_password(current_user, data.current_password, data.new_password)
+    return {'result': 1 if result else 0}
+  except Exception as e:
+    logger.debug(e)
+    raise JSONResponse(status_code=400, content={"error": str(e)})
 
 # 사용자 성향 목록 조회
-@app.route("/user/persona/list", methods=["POST"])
-def get_user_persona_list():
-  message, code = verify_token()
-
-  if code == 200:
-    persona_list = dbUtils.get_user_persona_list()
-    return jsonify(persona_list)
-  else:
-    return jsonify({"error": message}), code
+@app.post("/user/persona/list")
+async def get_user_persona_list(current_user: str = Depends(verify_token)):
+  persona_list = dbUtils.get_user_persona_list()
+  return persona_list
 
 # 사용자 성향 정보 조회
-@app.route("/user/persona/data", methods=["POST"])
-def get_user_persona_data():
+@app.post("/user/persona/data")
+async def get_user_persona_data(data: PersonaDataRequest, current_user: str = Depends(verify_token)):
   logger.debug('========= 사용자 성향 정보 조회 =========')
-  message, code = verify_token()
-
-  if code == 200:
-    params = request.get_json()
-    if not params:
-      return jsonify({"error": "No JSON data provided"}), 400
-    
-    id = params.get('id').strip()
-
-    persona_data = dbUtils.get_user_persona_data(id)
-    return persona_data
-  else:
-    return jsonify({"error": message}), code
+  persona_data = dbUtils.get_user_persona_data(data.id)
+  return persona_data
 
 # 사용자 성향 정보 저장
-@app.route("/user/persona/register", methods=["POST"])
-def register_user_persona_data():
+@app.post("/user/persona/register")
+async def register_user_persona_data(data: PersonaRegisterRequest, current_user: str = Depends(verify_token)):
   logger.debug('========= 사용자 성향 정보 저장 =========')
-  message, code = verify_token()
 
-  if code == 200:
-    params = request.get_json()
-    if not params:
-      return jsonify({"error": "No JSON data provided"}), 400
-    
-    logger.debug(f'*** 현재 관리자 : {message}')
-    id = params.get('id').strip()
-    persona_data = params.get('persona_data')
-    logger.debug('id : ' + id)
-    logger.debug(persona_data)
-    #persona_data = json.loads(persona_data_str)
-    result = dbUtils.set_user_persona_data(id, persona_data)
-    return jsonify({'result': 1 if result else 0})
-  else:
-    return jsonify({"error": message}), code
-
-@atexit.register
-def shutdown():
-  """
-  Flask 앱 종료 시
-  - DB 접속 해제
-  """
-  dbUtils.disconnect()
+  logger.debug(f'*** 현재 관리자 : {current_user}')
+  logger.debug('id : ' + data.id)
+  logger.debug(data.persona_data)
+  #persona_data = json.loads(persona_data_str)
+  result = dbUtils.set_user_persona_data(data.id, data.persona_data)
+  return {'result': 1 if result else 0}
   
 #logger.debug(f'__name__ : {__name__}')
 if __name__ == '__main__':
   # 서버 실행
-  app.run(host="0.0.0.0", port=PORT, debug=True)
+  import uvicorn
+  uvicorn.run('admin_app:app', host="0.0.0.0", port=PORT, reload=True)

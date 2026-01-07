@@ -1,5 +1,7 @@
-flask
-flask_cors
+fastapi
+uvicorn[standard]
+jinja2
+pydantic
 pyjwt
 pymongo
 python-jose[cryptography]

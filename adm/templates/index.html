@@ -13,10 +13,10 @@
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
       rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="{{ url_for('static', filename='index.js') }}"></script>
+    <script src="{{ url_for('static', path='/index.js') }}"></script>
   </head>
   <body class="bg-gray-50 text-gray-900">
     <header class="sticky top-0 bg-slate-600 text-white flex items-center justify-between">

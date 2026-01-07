@@ -8,7 +8,7 @@ adm/
 │  ├─ index.js                # JS
 │  └─ styles.css              # CSS
 ├─ templates/                 
-│  └─ index.html              # Flask 템플릿 HTML
+│  └─ index.html              # FastAPI 템플릿 HTML
 ├─ admin_app.py               # 관리자 백엔드 서버
 ├─ auth.py                    # 관리자 인증 처리(JWT)
 ├─ db.py                      # DB 연결에 데이터를 처리
