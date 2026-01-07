@@ -134,8 +134,8 @@ def me():
     return jsonify({"error": message}), code
 
 # 관리자 암호 변경
-@app.route("/change-passrod", methods=["POST"])
-def change_passrod():
+@app.route("/change-password", methods=["POST"])
+def change_password():
   message, code = verify_token()
 
   if code == 200:
