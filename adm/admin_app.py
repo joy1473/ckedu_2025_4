@@ -1,6 +1,7 @@
 # 관리자 : 사용자 성향 변경 / 학습 버튼
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, abort
 from flask_cors import CORS
+import atexit
 import os
 from dotenv import load_dotenv
 import logging
@@ -30,7 +31,7 @@ PORT = 8000
 app = Flask(__name__)
 CORS(app)
 
-CHECK_AUTH = 0
+CHECK_AUTH = 1
 auth = Auth()
 dbUtils = DbUtils()
 
@@ -38,10 +39,10 @@ dbUtils = DbUtils()
 def index():
   return render_template('index.html')
 
-# 회원가입
+# 관리자 회원가입
 @app.route("/signup", methods=["POST"])
 def signup():
-  logger.debug('========= signup =========')
+  logger.debug('========= 관리자 회원가입 =========')
   params = request.get_json()
   if not params:
     return jsonify({"error": "No JSON data provided"}), 400
@@ -58,17 +59,19 @@ def signup():
       token_data = dbUtils.set_adm_user_data(email, password, name)
       return token_data
     except Exception as e:
+      #print(f'$$$$$$$$$$$$$ {type(e.args[0])} $$$$$$$$$$$$$')
+      #print(e.args[0])
       logger.debug(e)
-      return jsonify({"error": 'Error'}), 400
+      return jsonify({"error": e.args[0]}), 400
     
   except Exception as e:
     logger.debug(e)
-    return jsonify({"error": 'Error'}), 500
+    return jsonify({"error": e.args[0]}), 500
 
-# 로그인
+# 관리자 로그인
 @app.route("/login", methods=["POST"])
 def login():
-  logger.debug('========= login =========')
+  logger.debug('========= 관리자 로그인 =========')
   params = request.get_json()
   if not params:
     return jsonify({"error": "No JSON data provided"}), 400
@@ -84,11 +87,11 @@ def login():
       return token_data
     except Exception as e:
       logger.debug(e)
-      return jsonify({"error": 'Error'}), 400
+      return jsonify({"error": e.args[0]}), 400
     
   except Exception as e:
     logger.debug(e)
-    return jsonify({"error": 'Error'}), 500
+    return jsonify({"error": e.args[0]}), 500
 
 def verify_token():
   """
@@ -115,13 +118,55 @@ def verify_token():
   except Exception:
     return 'Token is invalid!', 403
 
-# JWT 보호 API
+# 관리자 인증 정보
 @app.route("/me", methods=["POST"])
 def me():
   message, code = verify_token()
 
   if code == 200:
-    return jsonify({"email": message})
+    try:
+      admin_user = dbUtils.get_adm_user_data(message)
+      return jsonify(admin_user)
+    except Exception as e:
+      logger.debug(e)
+      return jsonify({"error": e.args[0]}), 403
+  else:
+    return jsonify({"error": message}), code
+
+# 관리자 암호 변경
+@app.route("/change-passrod", methods=["POST"])
+def change_passrod():
+  message, code = verify_token()
+
+  if code == 200:
+    logger.debug('========= 관리자 암호 변경 =========')
+    params = request.get_json()
+    if not params:
+      return jsonify({"error": "No JSON data provided"}), 400
+    
+    try:
+      logger.debug(f'*** 현재 관리자 : {message}')
+      current_password = params.get('current_password').strip()
+      new_password = params.get('new_password').strip()
+      confirm_password = params.get('confirm_password').strip()
+      logger.debug(f'current_password : "{current_password}"')
+      logger.debug(f'new_password : "{new_password}"')
+      logger.debug(f'confirm_password : "{confirm_password}"')
+      if current_password == '' or new_password == '':
+        return jsonify({"error": "No data provided"}), 400
+      if new_password != confirm_password:
+        return jsonify({"error": "새 암호와 새 암호 확인이 일치하지 않습니다."}), 400
+
+      try:
+        result = dbUtils.set_adm_user_password(message, current_password, new_password)
+        return jsonify({'result': 1 if result else 0})
+      except Exception as e:
+        logger.debug(e)
+        return jsonify({"error": e.args[0]}), 400
+      
+    except Exception as e:
+      logger.debug(e)
+      return jsonify({"error": e.args[0]}), 500
   else:
     return jsonify({"error": message}), code
 
@@ -139,7 +184,7 @@ def get_user_persona_list():
 # 사용자 성향 정보 조회
 @app.route("/user/persona/data", methods=["POST"])
 def get_user_persona_data():
-  logger.debug('========= get_user_persona_data =========')
+  logger.debug('========= 사용자 성향 정보 조회 =========')
   message, code = verify_token()
 
   if code == 200:
@@ -157,7 +202,7 @@ def get_user_persona_data():
 # 사용자 성향 정보 저장
 @app.route("/user/persona/register", methods=["POST"])
 def register_user_persona_data():
-  logger.debug('========= register_user_persona_data =========')
+  logger.debug('========= 사용자 성향 정보 저장 =========')
   message, code = verify_token()
 
   if code == 200:
@@ -165,6 +210,7 @@ def register_user_persona_data():
     if not params:
       return jsonify({"error": "No JSON data provided"}), 400
     
+    logger.debug(f'*** 현재 관리자 : {message}')
     id = params.get('id').strip()
     persona_data = params.get('persona_data')
     logger.debug('id : ' + id)
@@ -175,6 +221,14 @@ def register_user_persona_data():
   else:
     return jsonify({"error": message}), code
 
+@atexit.register
+def shutdown():
+  """
+  Flask 앱 종료 시
+  - DB 접속 해제
+  """
+  dbUtils.disconnect()
+  
 #logger.debug(f'__name__ : {__name__}')
 if __name__ == '__main__':
   # 서버 실행

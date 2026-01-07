@@ -50,10 +50,16 @@ body {
   overflow-y: auto;
   outline: 0;
 }
+.modal-narrow {
+  --bs-modal-width: 32rem;
+}
 @media (min-width: 576px) {
   .modal {
     --bs-modal-margin: 1.75rem;
     --bs-modal-box-shadow: var(--bs-box-shadow);
+  }
+  .modal-narrow {
+    --bs-modal-margin: 6rem;
   }
 }
 .modal-dialog {

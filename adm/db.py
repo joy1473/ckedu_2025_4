@@ -79,11 +79,11 @@ class DbUtils:
       Exception
     """
     if not self.is_connected:
-      return None
+      raise Exception("DB 접속 필요")
     
     db_user = self.adm_user_collection.find_one({"email": in_email})
     if not db_user:
-      return None
+      raise Exception("해당 이메일의 관리자 정보가 없습니다.")
 
     return {"email": db_user['email'], "name": db_user['name']}
 
@@ -105,11 +105,11 @@ class DbUtils:
       Exception
     """
     if not self.is_connected:
-      return None
+      raise Exception("DB 접속 필요")
     
     db_user = self.adm_user_collection.find_one({"email": in_email})
     if db_user:
-      raise Exception("Admin user with the email is already exists")
+      raise Exception("해당 이메일의 관리자 정보가 이미 등록되어 있습니다.")
 
     user_data = {
       "email": in_email,
@@ -119,9 +119,14 @@ class DbUtils:
     res = self.adm_user_collection.insert_one(user_data)
     if res.inserted_id:
       token = self.auth.create_token(in_email)
-      return {"token": token, "token_type": "bearer"}
+      logger.debug(f'token : {token}')
+      if token:
+        return {"token": token, "token_type": "bearer"}
+      else:
+        logger.debug('토큰 생성 중 오류 : rollback')
+        self.adm_user_collection.delete_one({"email": in_email})
     else:
-      raise Exception("Admin user not created")
+      raise Exception("관리자 등록에 실패헸습니다.")
 
   def get_adm_user_login(self, in_email: str, in_password: str):
     """
@@ -140,17 +145,61 @@ class DbUtils:
       Exception
     """
     if not self.is_connected:
-      return None
+      raise Exception("DB 접속 필요")
     
-    print(f"++++++++++++++++++ email:{in_email} ++++++++++++++++++")
+    #print(f"++++++++++++++++++ email:{in_email} ++++++++++++++++++")
+    logger.debug(f'email : "{in_email}"')
+    logger.debug(f'password : "{in_password}"')
+    logger.debug('.......... 해당 이메일의 데이터가 있는지 확인 ..........')
     db_user = self.adm_user_collection.find_one({"email": in_email})
+    logger.debug(db_user)
     if not db_user:
-      raise Exception("Admin user not exists")
+      raise Exception("해당 이메일의 관리자 정보가 없습니다.")
     if not self.auth.verify_password(in_password, db_user["password"]):
-      raise Exception("Password is not correct")
+      raise Exception("암호가 다릅니다.")
 
     token = self.auth.create_token(in_email)
     return {"token": token, "token_type": "bearer"}
+
+  def set_adm_user_password(self, in_email: str, in_current_password: str, in_new_password: str):
+    """
+    관리자 암호 변경
+      in_email (str): 이메일
+      in_current_password (str): 현재 암호
+      in_new_password (str): 새 암호
+
+    Args:
+
+    Returns:
+      (bool): 암호 변경 여부
+
+    Raises:
+      Exception
+    """
+    if not self.is_connected:
+      raise Exception("DB 접속 필요")
+    
+    logger.debug(f'current_password : "{in_current_password}"')
+    logger.debug(f'new_password : "{in_new_password}"')
+    logger.debug('.......... 해당 이메일의 데이터가 있는지 확인 ..........')
+    db_user = self.adm_user_collection.find_one({"email": in_email})
+    logger.debug(db_user)
+    if not db_user:
+      raise Exception("해당 이메일의 관리자 정보가 없습니다.")
+    if not self.auth.verify_password(in_current_password, db_user["password"]):
+      raise Exception("현재 암호가 다릅니다.")
+
+    user_data = {
+      "password": self.auth.hash_password(in_new_password)
+    }
+    res = self.adm_user_collection.update_one(
+      {"_id": db_user["_id"]},
+      {
+        "$set": user_data,
+        #"$currentDate": {"updated_at": True}
+      }
+    )
+    return res.matched_count == 1
 
   def get_user_persona_list(self):
     """
@@ -216,7 +265,7 @@ class DbUtils:
       Exception
     """
     if not self.is_connected:
-      return None
+      raise Exception("DB 접속 필요")
     
     _id = ObjectId(in_id)
     filter_data = {"_id": _id}
