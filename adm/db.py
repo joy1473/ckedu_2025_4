@@ -32,7 +32,7 @@ class DbUtils:
     """
     # .env 파일에서 정보를 로드합니다.
     load_dotenv()
-    MONGO_URL = os.getenv("ADM_MONGO_URL")
+    MONGO_URL = os.getenv("MONGO_URI")
     self.is_connected = False
     try:
       # DB 접속 클라이언트 생성
