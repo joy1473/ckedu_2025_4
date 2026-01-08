@@ -1,6 +1,6 @@
 [
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "068270",
         "date": "2026-01-11",
         "quantity": 41,
@@ -10,7 +10,7 @@
         "profit": -289419
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "005380",
         "date": "2026-01-21",
         "quantity": 23,
@@ -20,7 +20,7 @@
         "profit": 147085
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "035420",
         "date": "2026-01-29",
         "quantity": 38,
@@ -30,7 +30,7 @@
         "profit": -242630
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "035420",
         "date": "2026-01-20",
         "quantity": 17,
@@ -40,7 +40,7 @@
         "profit": -79492
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "035420",
         "date": "2026-01-26",
         "quantity": 12,
@@ -60,7 +60,7 @@
         "profit": -142584
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "000660",
         "date": "2026-01-10",
         "quantity": 18,
@@ -90,7 +90,7 @@
         "profit": -81050
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "068270",
         "date": "2026-01-25",
         "quantity": 48,
@@ -100,7 +100,7 @@
         "profit": 687984
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "000660",
         "date": "2026-01-30",
         "quantity": 12,
@@ -120,7 +120,7 @@
         "profit": 143168
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "035420",
         "date": "2026-01-11",
         "quantity": 39,
@@ -130,7 +130,7 @@
         "profit": 526695
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "068270",
         "date": "2026-01-03",
         "quantity": 41,
@@ -140,7 +140,7 @@
         "profit": 300940
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "005380",
         "date": "2026-01-20",
         "quantity": 49,
@@ -150,7 +150,7 @@
         "profit": -287581
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "000660",
         "date": "2026-01-03",
         "quantity": 16,
@@ -160,7 +160,7 @@
         "profit": 130960
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "068270",
         "date": "2026-01-14",
         "quantity": 1,
@@ -170,7 +170,7 @@
         "profit": -8225
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "005380",
         "date": "2026-01-13",
         "quantity": 50,
@@ -210,7 +210,7 @@
         "profit": -32734
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "000660",
         "date": "2026-01-18",
         "quantity": 37,
@@ -220,7 +220,7 @@
         "profit": 400673
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "000660",
         "date": "2026-01-21",
         "quantity": 49,
@@ -240,7 +240,7 @@
         "profit": 8823
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "000660",
         "date": "2026-01-06",
         "quantity": 50,
@@ -260,7 +260,7 @@
         "profit": -7712
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "068270",
         "date": "2026-01-30",
         "quantity": 41,
@@ -270,7 +270,7 @@
         "profit": 421234
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "005930",
         "date": "2026-01-14",
         "quantity": 39,
@@ -300,7 +300,7 @@
         "profit": 409680
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "005380",
         "date": "2026-01-30",
         "quantity": 20,
@@ -310,7 +310,7 @@
         "profit": 189480
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "000660",
         "date": "2026-01-21",
         "quantity": 44,
@@ -320,7 +320,7 @@
         "profit": 244068
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "035420",
         "date": "2026-01-07",
         "quantity": 39,
@@ -400,7 +400,7 @@
         "profit": 58422
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "000660",
         "date": "2026-01-03",
         "quantity": 19,
@@ -410,7 +410,7 @@
         "profit": 259901
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "005380",
         "date": "2026-01-03",
         "quantity": 44,
@@ -420,7 +420,7 @@
         "profit": -31724
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "035420",
         "date": "2026-01-20",
         "quantity": 35,
@@ -430,7 +430,7 @@
         "profit": -111370
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "005380",
         "date": "2026-01-07",
         "quantity": 45,
@@ -460,7 +460,7 @@
         "profit": 240227
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "005380",
         "date": "2026-01-08",
         "quantity": 16,
@@ -520,7 +520,7 @@
         "profit": 399381
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "068270",
         "date": "2026-01-05",
         "quantity": 30,
@@ -560,7 +560,7 @@
         "profit": -129620
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "005380",
         "date": "2026-01-08",
         "quantity": 43,
@@ -580,7 +580,7 @@
         "profit": 112437
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "035420",
         "date": "2026-01-24",
         "quantity": 11,
@@ -590,7 +590,7 @@
         "profit": -31306
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "068270",
         "date": "2026-01-10",
         "quantity": 7,
@@ -620,7 +620,7 @@
         "profit": 197015
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "005930",
         "date": "2026-01-09",
         "quantity": 38,
@@ -630,7 +630,7 @@
         "profit": -9880
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "068270",
         "date": "2026-01-18",
         "quantity": 29,
@@ -640,7 +640,7 @@
         "profit": -76299
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "005380",
         "date": "2026-01-08",
         "quantity": 27,
@@ -660,7 +660,7 @@
         "profit": 362943
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "035420",
         "date": "2026-01-16",
         "quantity": 5,
@@ -680,7 +680,7 @@
         "profit": 291600
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "068270",
         "date": "2026-01-25",
         "quantity": 3,
@@ -710,7 +710,7 @@
         "profit": 69388
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "035420",
         "date": "2026-01-24",
         "quantity": 15,
@@ -720,7 +720,7 @@
         "profit": -113235
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "068270",
         "date": "2026-01-10",
         "quantity": 41,
@@ -730,7 +730,7 @@
         "profit": 2050
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "000660",
         "date": "2026-01-14",
         "quantity": 4,
@@ -770,7 +770,7 @@
         "profit": -11120
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "005380",
         "date": "2026-01-22",
         "quantity": 14,
@@ -790,7 +790,7 @@
         "profit": -25808
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "005930",
         "date": "2026-01-13",
         "quantity": 9,
@@ -800,7 +800,7 @@
         "profit": 17280
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "000660",
         "date": "2026-01-12",
         "quantity": 8,
@@ -810,7 +810,7 @@
         "profit": -66968
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "068270",
         "date": "2026-01-22",
         "quantity": 41,
@@ -830,7 +830,7 @@
         "profit": -7469
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "005380",
         "date": "2026-01-09",
         "quantity": 20,
@@ -860,7 +860,7 @@
         "profit": -34307
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "000660",
         "date": "2026-01-10",
         "quantity": 14,
@@ -870,7 +870,7 @@
         "profit": 119490
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "005380",
         "date": "2026-01-28",
         "quantity": 49,
@@ -890,7 +890,7 @@
         "profit": 188424
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "005930",
         "date": "2026-01-14",
         "quantity": 29,
@@ -910,7 +910,7 @@
         "profit": -123318
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "005930",
         "date": "2026-01-11",
         "quantity": 36,
@@ -920,7 +920,7 @@
         "profit": 31608
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "005380",
         "date": "2026-01-19",
         "quantity": 27,
@@ -970,7 +970,7 @@
         "profit": 332310
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "035420",
         "date": "2026-01-13",
         "quantity": 27,
@@ -990,7 +990,7 @@
         "profit": -201927
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "035420",
         "date": "2026-01-18",
         "quantity": 28,
@@ -1000,7 +1000,7 @@
         "profit": -9968
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "005930",
         "date": "2026-01-21",
         "quantity": 10,
@@ -1020,7 +1020,7 @@
         "profit": 294432
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "035420",
         "date": "2026-01-19",
         "quantity": 28,
@@ -1030,7 +1030,7 @@
         "profit": 395528
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "005930",
         "date": "2026-01-21",
         "quantity": 43,
@@ -1040,7 +1040,7 @@
         "profit": 188168
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "068270",
         "date": "2026-01-14",
         "quantity": 29,
@@ -1050,7 +1050,7 @@
         "profit": 118407
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "035420",
         "date": "2026-01-08",
         "quantity": 44,
@@ -1080,7 +1080,7 @@
         "profit": -8538
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "068270",
         "date": "2026-01-06",
         "quantity": 38,
@@ -1140,7 +1140,7 @@
         "profit": -55670
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "068270",
         "date": "2026-01-02",
         "quantity": 19,
@@ -1190,7 +1190,7 @@
         "profit": 431634
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "005930",
         "date": "2026-01-17",
         "quantity": 14,
@@ -1210,7 +1210,7 @@
         "profit": 1950
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "005930",
         "date": "2026-01-03",
         "quantity": 2,
@@ -1220,7 +1220,7 @@
         "profit": -946
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "068270",
         "date": "2026-01-10",
         "quantity": 22,
@@ -1240,7 +1240,7 @@
         "profit": -250236
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "005930",
         "date": "2026-01-07",
         "quantity": 35,
@@ -1250,7 +1250,7 @@
         "profit": 163835
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "068270",
         "date": "2026-01-24",
         "quantity": 6,
@@ -1270,7 +1270,7 @@
         "profit": 13130
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "068270",
         "date": "2026-01-26",
         "quantity": 32,
@@ -1280,7 +1280,7 @@
         "profit": 51904
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "005380",
         "date": "2026-01-31",
         "quantity": 5,
@@ -1300,7 +1300,7 @@
         "profit": 218439
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "068270",
         "date": "2026-01-30",
         "quantity": 29,
@@ -1320,7 +1320,7 @@
         "profit": 77500
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "068270",
         "date": "2026-01-15",
         "quantity": 25,
@@ -1330,7 +1330,7 @@
         "profit": 63075
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "068270",
         "date": "2026-01-10",
         "quantity": 44,
@@ -1350,7 +1350,7 @@
         "profit": 319560
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "005380",
         "date": "2026-01-03",
         "quantity": 41,
@@ -1370,7 +1370,7 @@
         "profit": 69160
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "068270",
         "date": "2026-01-06",
         "quantity": 30,
@@ -1380,7 +1380,7 @@
         "profit": 248820
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "035420",
         "date": "2026-01-27",
         "quantity": 30,
@@ -1400,7 +1400,7 @@
         "profit": 25298
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "005380",
         "date": "2026-01-07",
         "quantity": 12,
@@ -1430,7 +1430,7 @@
         "profit": -116985
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "005380",
         "date": "2026-01-14",
         "quantity": 48,
@@ -1440,7 +1440,7 @@
         "profit": 328272
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "005930",
         "date": "2026-01-06",
         "quantity": 22,
@@ -1470,7 +1470,7 @@
         "profit": -12960
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "005930",
         "date": "2026-01-15",
         "quantity": 33,
@@ -1480,7 +1480,7 @@
         "profit": -275055
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "000660",
         "date": "2026-01-20",
         "quantity": 30,
@@ -1530,7 +1530,7 @@
         "profit": 162747
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "035420",
         "date": "2026-01-25",
         "quantity": 35,
@@ -1540,7 +1540,7 @@
         "profit": -57155
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "000660",
         "date": "2026-01-20",
         "quantity": 25,
@@ -1550,7 +1550,7 @@
         "profit": -139475
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "000660",
         "date": "2026-01-02",
         "quantity": 17,
@@ -1610,7 +1610,7 @@
         "profit": 41316
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "005930",
         "date": "2026-01-10",
         "quantity": 3,
@@ -1620,7 +1620,7 @@
         "profit": 41520
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "005380",
         "date": "2026-01-02",
         "quantity": 5,
@@ -1650,7 +1650,7 @@
         "profit": 239076
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "035420",
         "date": "2026-01-13",
         "quantity": 41,
@@ -1670,7 +1670,7 @@
         "profit": 111852
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "005380",
         "date": "2026-01-02",
         "quantity": 22,
@@ -1710,7 +1710,7 @@
         "profit": -266100
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "000660",
         "date": "2026-01-31",
         "quantity": 15,
@@ -1730,7 +1730,7 @@
         "profit": -39128
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "035420",
         "date": "2026-01-31",
         "quantity": 39,
@@ -1740,7 +1740,7 @@
         "profit": 182715
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "005380",
         "date": "2026-01-25",
         "quantity": 49,
@@ -1750,7 +1750,7 @@
         "profit": 565166
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "068270",
         "date": "2026-01-10",
         "quantity": 40,
@@ -1760,7 +1760,7 @@
         "profit": 315280
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "005930",
         "date": "2026-01-02",
         "quantity": 30,
@@ -1790,7 +1790,7 @@
         "profit": 127946
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "005380",
         "date": "2026-01-09",
         "quantity": 29,
@@ -1830,7 +1830,7 @@
         "profit": 25992
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "000660",
         "date": "2026-01-06",
         "quantity": 36,
@@ -1840,7 +1840,7 @@
         "profit": -323064
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "035420",
         "date": "2026-01-19",
         "quantity": 28,
@@ -1850,7 +1850,7 @@
         "profit": 165284
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "005930",
         "date": "2026-01-30",
         "quantity": 4,
@@ -1860,7 +1860,7 @@
         "profit": 20764
     },
     {
-        "user_id": "user04",
+        "user_id": "user4",
         "code": "005380",
         "date": "2026-01-20",
         "quantity": 50,
@@ -1880,7 +1880,7 @@
         "profit": -4080
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "005930",
         "date": "2026-01-30",
         "quantity": 35,
@@ -1890,7 +1890,7 @@
         "profit": 429905
     },
     {
-        "user_id": "user05",
+        "user_id": "user5",
         "code": "068270",
         "date": "2026-01-01",
         "quantity": 50,
@@ -1900,7 +1900,7 @@
         "profit": 244150
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "068270",
         "date": "2026-01-15",
         "quantity": 45,
@@ -1910,7 +1910,7 @@
         "profit": -225765
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "005380",
         "date": "2026-01-17",
         "quantity": 29,
@@ -1930,7 +1930,7 @@
         "profit": 158300
     },
     {
-        "user_id": "user03",
+        "user_id": "user3",
         "code": "035420",
         "date": "2026-01-09",
         "quantity": 2,
@@ -1960,7 +1960,7 @@
         "profit": 518363
     },
     {
-        "user_id": "user02",
+        "user_id": "user2",
         "code": "035420",
         "date": "2026-01-04",
         "quantity": 38,
@@ -1990,7 +1990,7 @@
         "profit": 266836
     },
     {
-        "user_id": "user01",
+        "user_id": "user1",
         "code": "068270",
         "date": "2026-01-29",
         "quantity": 6,
