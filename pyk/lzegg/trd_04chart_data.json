@@ -1,0 +1,2002 @@
+[
+    {
+        "user_id": "user04",
+        "code": "068270",
+        "date": "2026-01-11",
+        "quantity": 41,
+        "buyPrice": 169316,
+        "currentPrice": 162257,
+        "invest_amount": 4165173.5999999996,
+        "profit": -289419
+    },
+    {
+        "user_id": "user03",
+        "code": "005380",
+        "date": "2026-01-21",
+        "quantity": 23,
+        "buyPrice": 254503,
+        "currentPrice": 260898,
+        "invest_amount": 3512141.4,
+        "profit": 147085
+    },
+    {
+        "user_id": "user03",
+        "code": "035420",
+        "date": "2026-01-29",
+        "quantity": 38,
+        "buyPrice": 193525,
+        "currentPrice": 187140,
+        "invest_amount": 4412370.0,
+        "profit": -242630
+    },
+    {
+        "user_id": "user04",
+        "code": "035420",
+        "date": "2026-01-20",
+        "quantity": 17,
+        "buyPrice": 189909,
+        "currentPrice": 185233,
+        "invest_amount": 1937071.7999999998,
+        "profit": -79492
+    },
+    {
+        "user_id": "user04",
+        "code": "035420",
+        "date": "2026-01-26",
+        "quantity": 12,
+        "buyPrice": 189479,
+        "currentPrice": 195363,
+        "invest_amount": 1364248.8,
+        "profit": 70608
+    },
+    {
+        "user_id": "user10",
+        "code": "035420",
+        "date": "2026-01-13",
+        "quantity": 26,
+        "buyPrice": 193470,
+        "currentPrice": 187986,
+        "invest_amount": 3018132.0,
+        "profit": -142584
+    },
+    {
+        "user_id": "user02",
+        "code": "000660",
+        "date": "2026-01-10",
+        "quantity": 18,
+        "buyPrice": 176758,
+        "currentPrice": 174860,
+        "invest_amount": 1908986.4,
+        "profit": -34164
+    },
+    {
+        "user_id": "user07",
+        "code": "005930",
+        "date": "2026-01-07",
+        "quantity": 15,
+        "buyPrice": 74149,
+        "currentPrice": 76871,
+        "invest_amount": 667341.0,
+        "profit": 40830
+    },
+    {
+        "user_id": "user09",
+        "code": "005930",
+        "date": "2026-01-18",
+        "quantity": 10,
+        "buyPrice": 67071,
+        "currentPrice": 58966,
+        "invest_amount": 402426.0,
+        "profit": -81050
+    },
+    {
+        "user_id": "user05",
+        "code": "068270",
+        "date": "2026-01-25",
+        "quantity": 48,
+        "buyPrice": 168824,
+        "currentPrice": 183157,
+        "invest_amount": 4862131.2,
+        "profit": 687984
+    },
+    {
+        "user_id": "user04",
+        "code": "000660",
+        "date": "2026-01-30",
+        "quantity": 12,
+        "buyPrice": 183325,
+        "currentPrice": 189102,
+        "invest_amount": 1319940.0,
+        "profit": 69324
+    },
+    {
+        "user_id": "user09",
+        "code": "005380",
+        "date": "2026-01-18",
+        "quantity": 16,
+        "buyPrice": 247886,
+        "currentPrice": 256834,
+        "invest_amount": 2379705.6,
+        "profit": 143168
+    },
+    {
+        "user_id": "user01",
+        "code": "035420",
+        "date": "2026-01-11",
+        "quantity": 39,
+        "buyPrice": 193945,
+        "currentPrice": 207450,
+        "invest_amount": 4538313.0,
+        "profit": 526695
+    },
+    {
+        "user_id": "user03",
+        "code": "068270",
+        "date": "2026-01-03",
+        "quantity": 41,
+        "buyPrice": 169348,
+        "currentPrice": 176688,
+        "invest_amount": 4165960.8,
+        "profit": 300940
+    },
+    {
+        "user_id": "user04",
+        "code": "005380",
+        "date": "2026-01-20",
+        "quantity": 49,
+        "buyPrice": 247248,
+        "currentPrice": 241379,
+        "invest_amount": 7269091.2,
+        "profit": -287581
+    },
+    {
+        "user_id": "user02",
+        "code": "000660",
+        "date": "2026-01-03",
+        "quantity": 16,
+        "buyPrice": 181294,
+        "currentPrice": 189479,
+        "invest_amount": 1740422.4,
+        "profit": 130960
+    },
+    {
+        "user_id": "user03",
+        "code": "068270",
+        "date": "2026-01-14",
+        "quantity": 1,
+        "buyPrice": 171079,
+        "currentPrice": 162854,
+        "invest_amount": 102647.4,
+        "profit": -8225
+    },
+    {
+        "user_id": "user02",
+        "code": "005380",
+        "date": "2026-01-13",
+        "quantity": 50,
+        "buyPrice": 247428,
+        "currentPrice": 241528,
+        "invest_amount": 7422840.0,
+        "profit": -295000
+    },
+    {
+        "user_id": "user06",
+        "code": "005930",
+        "date": "2026-01-16",
+        "quantity": 24,
+        "buyPrice": 74871,
+        "currentPrice": 89592,
+        "invest_amount": 1078142.4,
+        "profit": 353304
+    },
+    {
+        "user_id": "user08",
+        "code": "000660",
+        "date": "2026-01-05",
+        "quantity": 46,
+        "buyPrice": 178875,
+        "currentPrice": 181810,
+        "invest_amount": 4936950.0,
+        "profit": 135010
+    },
+    {
+        "user_id": "user10",
+        "code": "000660",
+        "date": "2026-01-09",
+        "quantity": 26,
+        "buyPrice": 177236,
+        "currentPrice": 175977,
+        "invest_amount": 2764881.6,
+        "profit": -32734
+    },
+    {
+        "user_id": "user03",
+        "code": "000660",
+        "date": "2026-01-18",
+        "quantity": 37,
+        "buyPrice": 180805,
+        "currentPrice": 191634,
+        "invest_amount": 4013871.0,
+        "profit": 400673
+    },
+    {
+        "user_id": "user01",
+        "code": "000660",
+        "date": "2026-01-21",
+        "quantity": 49,
+        "buyPrice": 177798,
+        "currentPrice": 171358,
+        "invest_amount": 5227261.2,
+        "profit": -315560
+    },
+    {
+        "user_id": "user08",
+        "code": "035420",
+        "date": "2026-01-27",
+        "quantity": 3,
+        "buyPrice": 191860,
+        "currentPrice": 194801,
+        "invest_amount": 345348.0,
+        "profit": 8823
+    },
+    {
+        "user_id": "user01",
+        "code": "000660",
+        "date": "2026-01-06",
+        "quantity": 50,
+        "buyPrice": 175558,
+        "currentPrice": 183889,
+        "invest_amount": 5266740.0,
+        "profit": 416550
+    },
+    {
+        "user_id": "user09",
+        "code": "068270",
+        "date": "2026-01-16",
+        "quantity": 16,
+        "buyPrice": 166738,
+        "currentPrice": 166256,
+        "invest_amount": 1600684.8,
+        "profit": -7712
+    },
+    {
+        "user_id": "user02",
+        "code": "068270",
+        "date": "2026-01-30",
+        "quantity": 41,
+        "buyPrice": 174439,
+        "currentPrice": 184713,
+        "invest_amount": 4291199.399999999,
+        "profit": 421234
+    },
+    {
+        "user_id": "user01",
+        "code": "005930",
+        "date": "2026-01-14",
+        "quantity": 39,
+        "buyPrice": 71169,
+        "currentPrice": 63889,
+        "invest_amount": 1665354.5999999999,
+        "profit": -283920
+    },
+    {
+        "user_id": "user06",
+        "code": "005380",
+        "date": "2026-01-14",
+        "quantity": 43,
+        "buyPrice": 253565,
+        "currentPrice": 259933,
+        "invest_amount": 6541977.0,
+        "profit": 273824
+    },
+    {
+        "user_id": "user09",
+        "code": "035420",
+        "date": "2026-01-20",
+        "quantity": 45,
+        "buyPrice": 191586,
+        "currentPrice": 200690,
+        "invest_amount": 5172822.0,
+        "profit": 409680
+    },
+    {
+        "user_id": "user04",
+        "code": "005380",
+        "date": "2026-01-30",
+        "quantity": 20,
+        "buyPrice": 252919,
+        "currentPrice": 262393,
+        "invest_amount": 3035028.0,
+        "profit": 189480
+    },
+    {
+        "user_id": "user03",
+        "code": "000660",
+        "date": "2026-01-21",
+        "quantity": 44,
+        "buyPrice": 181164,
+        "currentPrice": 186711,
+        "invest_amount": 4782729.6,
+        "profit": 244068
+    },
+    {
+        "user_id": "user02",
+        "code": "035420",
+        "date": "2026-01-07",
+        "quantity": 39,
+        "buyPrice": 186897,
+        "currentPrice": 182224,
+        "invest_amount": 4373389.8,
+        "profit": -182247
+    },
+    {
+        "user_id": "user08",
+        "code": "068270",
+        "date": "2026-01-26",
+        "quantity": 36,
+        "buyPrice": 166661,
+        "currentPrice": 172035,
+        "invest_amount": 3599877.6,
+        "profit": 193464
+    },
+    {
+        "user_id": "user06",
+        "code": "035420",
+        "date": "2026-01-14",
+        "quantity": 32,
+        "buyPrice": 189866,
+        "currentPrice": 196735,
+        "invest_amount": 3645427.1999999997,
+        "profit": 219808
+    },
+    {
+        "user_id": "user10",
+        "code": "005930",
+        "date": "2026-01-15",
+        "quantity": 32,
+        "buyPrice": 73434,
+        "currentPrice": 77731,
+        "invest_amount": 1409932.8,
+        "profit": 137504
+    },
+    {
+        "user_id": "user08",
+        "code": "035420",
+        "date": "2026-01-24",
+        "quantity": 50,
+        "buyPrice": 187940,
+        "currentPrice": 197507,
+        "invest_amount": 5638200.0,
+        "profit": 478350
+    },
+    {
+        "user_id": "user08",
+        "code": "005380",
+        "date": "2026-01-12",
+        "quantity": 30,
+        "buyPrice": 251987,
+        "currentPrice": 264399,
+        "invest_amount": 4535766.0,
+        "profit": 372360
+    },
+    {
+        "user_id": "user10",
+        "code": "000660",
+        "date": "2026-01-04",
+        "quantity": 43,
+        "buyPrice": 177654,
+        "currentPrice": 170925,
+        "invest_amount": 4583473.2,
+        "profit": -289347
+    },
+    {
+        "user_id": "user10",
+        "code": "000660",
+        "date": "2026-01-22",
+        "quantity": 14,
+        "buyPrice": 176846,
+        "currentPrice": 181019,
+        "invest_amount": 1485506.4,
+        "profit": 58422
+    },
+    {
+        "user_id": "user03",
+        "code": "000660",
+        "date": "2026-01-03",
+        "quantity": 19,
+        "buyPrice": 184254,
+        "currentPrice": 197933,
+        "invest_amount": 2100495.6,
+        "profit": 259901
+    },
+    {
+        "user_id": "user02",
+        "code": "005380",
+        "date": "2026-01-03",
+        "quantity": 44,
+        "buyPrice": 248065,
+        "currentPrice": 247344,
+        "invest_amount": 6548916.0,
+        "profit": -31724
+    },
+    {
+        "user_id": "user03",
+        "code": "035420",
+        "date": "2026-01-20",
+        "quantity": 35,
+        "buyPrice": 193274,
+        "currentPrice": 190092,
+        "invest_amount": 4058754.0,
+        "profit": -111370
+    },
+    {
+        "user_id": "user01",
+        "code": "005380",
+        "date": "2026-01-07",
+        "quantity": 45,
+        "buyPrice": 254474,
+        "currentPrice": 265773,
+        "invest_amount": 6870798.0,
+        "profit": 508455
+    },
+    {
+        "user_id": "user06",
+        "code": "005930",
+        "date": "2026-01-29",
+        "quantity": 13,
+        "buyPrice": 66526,
+        "currentPrice": 70731,
+        "invest_amount": 518902.8,
+        "profit": 54665
+    },
+    {
+        "user_id": "user08",
+        "code": "035420",
+        "date": "2026-01-04",
+        "quantity": 17,
+        "buyPrice": 189153,
+        "currentPrice": 203284,
+        "invest_amount": 1929360.5999999999,
+        "profit": 240227
+    },
+    {
+        "user_id": "user04",
+        "code": "005380",
+        "date": "2026-01-08",
+        "quantity": 16,
+        "buyPrice": 246131,
+        "currentPrice": 239605,
+        "invest_amount": 2362857.6,
+        "profit": -104416
+    },
+    {
+        "user_id": "user09",
+        "code": "068270",
+        "date": "2026-01-06",
+        "quantity": 49,
+        "buyPrice": 174055,
+        "currentPrice": 166733,
+        "invest_amount": 5117217.0,
+        "profit": -358778
+    },
+    {
+        "user_id": "user06",
+        "code": "035420",
+        "date": "2026-01-11",
+        "quantity": 27,
+        "buyPrice": 189626,
+        "currentPrice": 189470,
+        "invest_amount": 3071941.1999999997,
+        "profit": -4212
+    },
+    {
+        "user_id": "user10",
+        "code": "005380",
+        "date": "2026-01-22",
+        "quantity": 27,
+        "buyPrice": 247529,
+        "currentPrice": 243571,
+        "invest_amount": 4009969.8,
+        "profit": -106866
+    },
+    {
+        "user_id": "user08",
+        "code": "068270",
+        "date": "2026-01-29",
+        "quantity": 25,
+        "buyPrice": 173672,
+        "currentPrice": 184940,
+        "invest_amount": 2605080.0,
+        "profit": 281700
+    },
+    {
+        "user_id": "user07",
+        "code": "035420",
+        "date": "2026-01-28",
+        "quantity": 41,
+        "buyPrice": 185823,
+        "currentPrice": 195564,
+        "invest_amount": 4571245.8,
+        "profit": 399381
+    },
+    {
+        "user_id": "user01",
+        "code": "068270",
+        "date": "2026-01-05",
+        "quantity": 30,
+        "buyPrice": 165063,
+        "currentPrice": 160468,
+        "invest_amount": 2971134.0,
+        "profit": -137850
+    },
+    {
+        "user_id": "user10",
+        "code": "005930",
+        "date": "2026-01-24",
+        "quantity": 44,
+        "buyPrice": 74337,
+        "currentPrice": 80595,
+        "invest_amount": 1962496.7999999998,
+        "profit": 275352
+    },
+    {
+        "user_id": "user07",
+        "code": "000660",
+        "date": "2026-01-22",
+        "quantity": 49,
+        "buyPrice": 183071,
+        "currentPrice": 190686,
+        "invest_amount": 5382287.399999999,
+        "profit": 373135
+    },
+    {
+        "user_id": "user08",
+        "code": "005930",
+        "date": "2026-01-13",
+        "quantity": 20,
+        "buyPrice": 68692,
+        "currentPrice": 62211,
+        "invest_amount": 824304.0,
+        "profit": -129620
+    },
+    {
+        "user_id": "user02",
+        "code": "005380",
+        "date": "2026-01-08",
+        "quantity": 43,
+        "buyPrice": 252257,
+        "currentPrice": 252635,
+        "invest_amount": 6508230.6,
+        "profit": 16254
+    },
+    {
+        "user_id": "user10",
+        "code": "005930",
+        "date": "2026-01-19",
+        "quantity": 31,
+        "buyPrice": 69971,
+        "currentPrice": 73598,
+        "invest_amount": 1301460.5999999999,
+        "profit": 112437
+    },
+    {
+        "user_id": "user02",
+        "code": "035420",
+        "date": "2026-01-24",
+        "quantity": 11,
+        "buyPrice": 189056,
+        "currentPrice": 186210,
+        "invest_amount": 1247769.5999999999,
+        "profit": -31306
+    },
+    {
+        "user_id": "user01",
+        "code": "068270",
+        "date": "2026-01-10",
+        "quantity": 7,
+        "buyPrice": 173844,
+        "currentPrice": 180000,
+        "invest_amount": 730144.7999999999,
+        "profit": 43092
+    },
+    {
+        "user_id": "user06",
+        "code": "035420",
+        "date": "2026-01-02",
+        "quantity": 24,
+        "buyPrice": 194551,
+        "currentPrice": 185692,
+        "invest_amount": 2801534.4,
+        "profit": -212616
+    },
+    {
+        "user_id": "user10",
+        "code": "035420",
+        "date": "2026-01-10",
+        "quantity": 35,
+        "buyPrice": 186523,
+        "currentPrice": 192152,
+        "invest_amount": 3916983.0,
+        "profit": 197015
+    },
+    {
+        "user_id": "user05",
+        "code": "005930",
+        "date": "2026-01-09",
+        "quantity": 38,
+        "buyPrice": 69222,
+        "currentPrice": 68962,
+        "invest_amount": 1578261.5999999999,
+        "profit": -9880
+    },
+    {
+        "user_id": "user03",
+        "code": "068270",
+        "date": "2026-01-18",
+        "quantity": 29,
+        "buyPrice": 172880,
+        "currentPrice": 170249,
+        "invest_amount": 3008112.0,
+        "profit": -76299
+    },
+    {
+        "user_id": "user04",
+        "code": "005380",
+        "date": "2026-01-08",
+        "quantity": 27,
+        "buyPrice": 252510,
+        "currentPrice": 242890,
+        "invest_amount": 4090662.0,
+        "profit": -259740
+    },
+    {
+        "user_id": "user07",
+        "code": "035420",
+        "date": "2026-01-08",
+        "quantity": 49,
+        "buyPrice": 185271,
+        "currentPrice": 192678,
+        "invest_amount": 5446967.399999999,
+        "profit": 362943
+    },
+    {
+        "user_id": "user05",
+        "code": "035420",
+        "date": "2026-01-16",
+        "quantity": 5,
+        "buyPrice": 188472,
+        "currentPrice": 201092,
+        "invest_amount": 565416.0,
+        "profit": 63100
+    },
+    {
+        "user_id": "user07",
+        "code": "005380",
+        "date": "2026-01-24",
+        "quantity": 36,
+        "buyPrice": 249139,
+        "currentPrice": 257239,
+        "invest_amount": 5381402.399999999,
+        "profit": 291600
+    },
+    {
+        "user_id": "user05",
+        "code": "068270",
+        "date": "2026-01-25",
+        "quantity": 3,
+        "buyPrice": 165631,
+        "currentPrice": 160952,
+        "invest_amount": 298135.8,
+        "profit": -14037
+    },
+    {
+        "user_id": "user07",
+        "code": "005930",
+        "date": "2026-01-29",
+        "quantity": 37,
+        "buyPrice": 67859,
+        "currentPrice": 79098,
+        "invest_amount": 1506469.8,
+        "profit": 415843
+    },
+    {
+        "user_id": "user10",
+        "code": "068270",
+        "date": "2026-01-30",
+        "quantity": 11,
+        "buyPrice": 170377,
+        "currentPrice": 176685,
+        "invest_amount": 1124488.2,
+        "profit": 69388
+    },
+    {
+        "user_id": "user05",
+        "code": "035420",
+        "date": "2026-01-24",
+        "quantity": 15,
+        "buyPrice": 190522,
+        "currentPrice": 182973,
+        "invest_amount": 1714698.0,
+        "profit": -113235
+    },
+    {
+        "user_id": "user01",
+        "code": "068270",
+        "date": "2026-01-10",
+        "quantity": 41,
+        "buyPrice": 169112,
+        "currentPrice": 169162,
+        "invest_amount": 4160155.1999999997,
+        "profit": 2050
+    },
+    {
+        "user_id": "user05",
+        "code": "000660",
+        "date": "2026-01-14",
+        "quantity": 4,
+        "buyPrice": 184516,
+        "currentPrice": 184495,
+        "invest_amount": 442838.39999999997,
+        "profit": -84
+    },
+    {
+        "user_id": "user09",
+        "code": "000660",
+        "date": "2026-01-02",
+        "quantity": 42,
+        "buyPrice": 176314,
+        "currentPrice": 189473,
+        "invest_amount": 4443112.8,
+        "profit": 552678
+    },
+    {
+        "user_id": "user06",
+        "code": "005380",
+        "date": "2026-01-25",
+        "quantity": 18,
+        "buyPrice": 253339,
+        "currentPrice": 248186,
+        "invest_amount": 2736061.1999999997,
+        "profit": -92754
+    },
+    {
+        "user_id": "user06",
+        "code": "005930",
+        "date": "2026-01-28",
+        "quantity": 20,
+        "buyPrice": 70466,
+        "currentPrice": 69910,
+        "invest_amount": 845592.0,
+        "profit": -11120
+    },
+    {
+        "user_id": "user01",
+        "code": "005380",
+        "date": "2026-01-22",
+        "quantity": 14,
+        "buyPrice": 247933,
+        "currentPrice": 261198,
+        "invest_amount": 2082637.2,
+        "profit": 185710
+    },
+    {
+        "user_id": "user06",
+        "code": "005380",
+        "date": "2026-01-29",
+        "quantity": 16,
+        "buyPrice": 251617,
+        "currentPrice": 250004,
+        "invest_amount": 2415523.1999999997,
+        "profit": -25808
+    },
+    {
+        "user_id": "user01",
+        "code": "005930",
+        "date": "2026-01-13",
+        "quantity": 9,
+        "buyPrice": 70215,
+        "currentPrice": 72135,
+        "invest_amount": 379161.0,
+        "profit": 17280
+    },
+    {
+        "user_id": "user05",
+        "code": "000660",
+        "date": "2026-01-12",
+        "quantity": 8,
+        "buyPrice": 179772,
+        "currentPrice": 171401,
+        "invest_amount": 862905.6,
+        "profit": -66968
+    },
+    {
+        "user_id": "user05",
+        "code": "068270",
+        "date": "2026-01-22",
+        "quantity": 41,
+        "buyPrice": 170366,
+        "currentPrice": 163675,
+        "invest_amount": 4191003.5999999996,
+        "profit": -274331
+    },
+    {
+        "user_id": "user10",
+        "code": "035420",
+        "date": "2026-01-16",
+        "quantity": 11,
+        "buyPrice": 188814,
+        "currentPrice": 188135,
+        "invest_amount": 1246172.4,
+        "profit": -7469
+    },
+    {
+        "user_id": "user05",
+        "code": "005380",
+        "date": "2026-01-09",
+        "quantity": 20,
+        "buyPrice": 253244,
+        "currentPrice": 253254,
+        "invest_amount": 3038928.0,
+        "profit": 200
+    },
+    {
+        "user_id": "user06",
+        "code": "000660",
+        "date": "2026-01-29",
+        "quantity": 32,
+        "buyPrice": 176182,
+        "currentPrice": 182024,
+        "invest_amount": 3382694.4,
+        "profit": 186944
+    },
+    {
+        "user_id": "user06",
+        "code": "068270",
+        "date": "2026-01-03",
+        "quantity": 13,
+        "buyPrice": 168059,
+        "currentPrice": 165420,
+        "invest_amount": 1310860.2,
+        "profit": -34307
+    },
+    {
+        "user_id": "user02",
+        "code": "000660",
+        "date": "2026-01-10",
+        "quantity": 14,
+        "buyPrice": 175073,
+        "currentPrice": 183608,
+        "invest_amount": 1470613.2,
+        "profit": 119490
+    },
+    {
+        "user_id": "user01",
+        "code": "005380",
+        "date": "2026-01-28",
+        "quantity": 49,
+        "buyPrice": 250317,
+        "currentPrice": 260903,
+        "invest_amount": 7359319.8,
+        "profit": 518714
+    },
+    {
+        "user_id": "user09",
+        "code": "005380",
+        "date": "2026-01-07",
+        "quantity": 18,
+        "buyPrice": 250545,
+        "currentPrice": 261013,
+        "invest_amount": 2705886.0,
+        "profit": 188424
+    },
+    {
+        "user_id": "user04",
+        "code": "005930",
+        "date": "2026-01-14",
+        "quantity": 29,
+        "buyPrice": 74491,
+        "currentPrice": 71355,
+        "invest_amount": 1296143.4,
+        "profit": -90944
+    },
+    {
+        "user_id": "user09",
+        "code": "068270",
+        "date": "2026-01-23",
+        "quantity": 18,
+        "buyPrice": 165113,
+        "currentPrice": 158262,
+        "invest_amount": 1783220.4,
+        "profit": -123318
+    },
+    {
+        "user_id": "user03",
+        "code": "005930",
+        "date": "2026-01-11",
+        "quantity": 36,
+        "buyPrice": 69804,
+        "currentPrice": 70682,
+        "invest_amount": 1507766.4,
+        "profit": 31608
+    },
+    {
+        "user_id": "user02",
+        "code": "005380",
+        "date": "2026-01-19",
+        "quantity": 27,
+        "buyPrice": 247072,
+        "currentPrice": 254603,
+        "invest_amount": 4002566.4,
+        "profit": 203337
+    },
+    {
+        "user_id": "user09",
+        "code": "000660",
+        "date": "2026-01-28",
+        "quantity": 26,
+        "buyPrice": 184806,
+        "currentPrice": 178890,
+        "invest_amount": 2882973.6,
+        "profit": -153816
+    },
+    {
+        "user_id": "user06",
+        "code": "000660",
+        "date": "2026-01-14",
+        "quantity": 46,
+        "buyPrice": 184394,
+        "currentPrice": 194471,
+        "invest_amount": 5089274.399999999,
+        "profit": 463542
+    },
+    {
+        "user_id": "user06",
+        "code": "005930",
+        "date": "2026-01-25",
+        "quantity": 34,
+        "buyPrice": 65413,
+        "currentPrice": 71628,
+        "invest_amount": 1334425.2,
+        "profit": 211310
+    },
+    {
+        "user_id": "user10",
+        "code": "005930",
+        "date": "2026-01-25",
+        "quantity": 38,
+        "buyPrice": 68651,
+        "currentPrice": 77396,
+        "invest_amount": 1565242.8,
+        "profit": 332310
+    },
+    {
+        "user_id": "user03",
+        "code": "035420",
+        "date": "2026-01-13",
+        "quantity": 27,
+        "buyPrice": 188673,
+        "currentPrice": 182483,
+        "invest_amount": 3056502.6,
+        "profit": -167130
+    },
+    {
+        "user_id": "user06",
+        "code": "005930",
+        "date": "2026-01-10",
+        "quantity": 29,
+        "buyPrice": 70939,
+        "currentPrice": 63976,
+        "invest_amount": 1234338.5999999999,
+        "profit": -201927
+    },
+    {
+        "user_id": "user02",
+        "code": "035420",
+        "date": "2026-01-18",
+        "quantity": 28,
+        "buyPrice": 186272,
+        "currentPrice": 185916,
+        "invest_amount": 3129369.6,
+        "profit": -9968
+    },
+    {
+        "user_id": "user04",
+        "code": "005930",
+        "date": "2026-01-21",
+        "quantity": 10,
+        "buyPrice": 74602,
+        "currentPrice": 76761,
+        "invest_amount": 447612.0,
+        "profit": 21590
+    },
+    {
+        "user_id": "user07",
+        "code": "068270",
+        "date": "2026-01-07",
+        "quantity": 32,
+        "buyPrice": 166238,
+        "currentPrice": 175439,
+        "invest_amount": 3191769.6,
+        "profit": 294432
+    },
+    {
+        "user_id": "user02",
+        "code": "035420",
+        "date": "2026-01-19",
+        "quantity": 28,
+        "buyPrice": 192627,
+        "currentPrice": 206753,
+        "invest_amount": 3236133.6,
+        "profit": 395528
+    },
+    {
+        "user_id": "user01",
+        "code": "005930",
+        "date": "2026-01-21",
+        "quantity": 43,
+        "buyPrice": 69821,
+        "currentPrice": 74197,
+        "invest_amount": 1801381.8,
+        "profit": 188168
+    },
+    {
+        "user_id": "user01",
+        "code": "068270",
+        "date": "2026-01-14",
+        "quantity": 29,
+        "buyPrice": 173545,
+        "currentPrice": 177628,
+        "invest_amount": 3019683.0,
+        "profit": 118407
+    },
+    {
+        "user_id": "user05",
+        "code": "035420",
+        "date": "2026-01-08",
+        "quantity": 44,
+        "buyPrice": 192087,
+        "currentPrice": 187137,
+        "invest_amount": 5071096.8,
+        "profit": -217800
+    },
+    {
+        "user_id": "user08",
+        "code": "035420",
+        "date": "2026-01-21",
+        "quantity": 14,
+        "buyPrice": 192393,
+        "currentPrice": 191730,
+        "invest_amount": 1616101.2,
+        "profit": -9282
+    },
+    {
+        "user_id": "user08",
+        "code": "068270",
+        "date": "2026-01-18",
+        "quantity": 3,
+        "buyPrice": 170098,
+        "currentPrice": 167252,
+        "invest_amount": 306176.39999999997,
+        "profit": -8538
+    },
+    {
+        "user_id": "user04",
+        "code": "068270",
+        "date": "2026-01-06",
+        "quantity": 38,
+        "buyPrice": 165856,
+        "currentPrice": 178277,
+        "invest_amount": 3781516.8,
+        "profit": 471998
+    },
+    {
+        "user_id": "user09",
+        "code": "000660",
+        "date": "2026-01-22",
+        "quantity": 35,
+        "buyPrice": 178737,
+        "currentPrice": 177540,
+        "invest_amount": 3753477.0,
+        "profit": -41895
+    },
+    {
+        "user_id": "user10",
+        "code": "035420",
+        "date": "2026-01-20",
+        "quantity": 3,
+        "buyPrice": 192835,
+        "currentPrice": 183476,
+        "invest_amount": 347103.0,
+        "profit": -28077
+    },
+    {
+        "user_id": "user07",
+        "code": "035420",
+        "date": "2026-01-19",
+        "quantity": 22,
+        "buyPrice": 192952,
+        "currentPrice": 185326,
+        "invest_amount": 2546966.4,
+        "profit": -167772
+    },
+    {
+        "user_id": "user09",
+        "code": "005380",
+        "date": "2026-01-24",
+        "quantity": 25,
+        "buyPrice": 250750,
+        "currentPrice": 253740,
+        "invest_amount": 3761250.0,
+        "profit": 74750
+    },
+    {
+        "user_id": "user06",
+        "code": "005380",
+        "date": "2026-01-11",
+        "quantity": 38,
+        "buyPrice": 250194,
+        "currentPrice": 248729,
+        "invest_amount": 5704423.2,
+        "profit": -55670
+    },
+    {
+        "user_id": "user01",
+        "code": "068270",
+        "date": "2026-01-02",
+        "quantity": 19,
+        "buyPrice": 169095,
+        "currentPrice": 182245,
+        "invest_amount": 1927683.0,
+        "profit": 249850
+    },
+    {
+        "user_id": "user06",
+        "code": "068270",
+        "date": "2026-01-16",
+        "quantity": 8,
+        "buyPrice": 171753,
+        "currentPrice": 165084,
+        "invest_amount": 824414.4,
+        "profit": -53352
+    },
+    {
+        "user_id": "user10",
+        "code": "005380",
+        "date": "2026-01-13",
+        "quantity": 44,
+        "buyPrice": 245855,
+        "currentPrice": 258388,
+        "invest_amount": 6490572.0,
+        "profit": 551452
+    },
+    {
+        "user_id": "user06",
+        "code": "068270",
+        "date": "2026-01-11",
+        "quantity": 31,
+        "buyPrice": 168250,
+        "currentPrice": 164588,
+        "invest_amount": 3129450.0,
+        "profit": -113522
+    },
+    {
+        "user_id": "user06",
+        "code": "005930",
+        "date": "2026-01-29",
+        "quantity": 43,
+        "buyPrice": 73402,
+        "currentPrice": 83440,
+        "invest_amount": 1893771.5999999999,
+        "profit": 431634
+    },
+    {
+        "user_id": "user02",
+        "code": "005930",
+        "date": "2026-01-17",
+        "quantity": 14,
+        "buyPrice": 66400,
+        "currentPrice": 61288,
+        "invest_amount": 557760.0,
+        "profit": -71568
+    },
+    {
+        "user_id": "user07",
+        "code": "035420",
+        "date": "2026-01-23",
+        "quantity": 25,
+        "buyPrice": 193880,
+        "currentPrice": 193958,
+        "invest_amount": 2908200.0,
+        "profit": 1950
+    },
+    {
+        "user_id": "user01",
+        "code": "005930",
+        "date": "2026-01-03",
+        "quantity": 2,
+        "buyPrice": 73106,
+        "currentPrice": 72633,
+        "invest_amount": 87727.2,
+        "profit": -946
+    },
+    {
+        "user_id": "user03",
+        "code": "068270",
+        "date": "2026-01-10",
+        "quantity": 22,
+        "buyPrice": 174536,
+        "currentPrice": 167283,
+        "invest_amount": 2303875.1999999997,
+        "profit": -159566
+    },
+    {
+        "user_id": "user07",
+        "code": "068270",
+        "date": "2026-01-17",
+        "quantity": 36,
+        "buyPrice": 167009,
+        "currentPrice": 160058,
+        "invest_amount": 3607394.4,
+        "profit": -250236
+    },
+    {
+        "user_id": "user03",
+        "code": "005930",
+        "date": "2026-01-07",
+        "quantity": 35,
+        "buyPrice": 71543,
+        "currentPrice": 76224,
+        "invest_amount": 1502403.0,
+        "profit": 163835
+    },
+    {
+        "user_id": "user04",
+        "code": "068270",
+        "date": "2026-01-24",
+        "quantity": 6,
+        "buyPrice": 171662,
+        "currentPrice": 176177,
+        "invest_amount": 617983.2,
+        "profit": 27090
+    },
+    {
+        "user_id": "user08",
+        "code": "005930",
+        "date": "2026-01-04",
+        "quantity": 10,
+        "buyPrice": 69995,
+        "currentPrice": 71308,
+        "invest_amount": 419970.0,
+        "profit": 13130
+    },
+    {
+        "user_id": "user05",
+        "code": "068270",
+        "date": "2026-01-26",
+        "quantity": 32,
+        "buyPrice": 166974,
+        "currentPrice": 168596,
+        "invest_amount": 3205900.8,
+        "profit": 51904
+    },
+    {
+        "user_id": "user01",
+        "code": "005380",
+        "date": "2026-01-31",
+        "quantity": 5,
+        "buyPrice": 246165,
+        "currentPrice": 240798,
+        "invest_amount": 738495.0,
+        "profit": -26835
+    },
+    {
+        "user_id": "user08",
+        "code": "005380",
+        "date": "2026-01-16",
+        "quantity": 39,
+        "buyPrice": 248831,
+        "currentPrice": 254432,
+        "invest_amount": 5822645.399999999,
+        "profit": 218439
+    },
+    {
+        "user_id": "user02",
+        "code": "068270",
+        "date": "2026-01-30",
+        "quantity": 29,
+        "buyPrice": 167748,
+        "currentPrice": 161209,
+        "invest_amount": 2918815.1999999997,
+        "profit": -189631
+    },
+    {
+        "user_id": "user10",
+        "code": "005380",
+        "date": "2026-01-29",
+        "quantity": 10,
+        "buyPrice": 249215,
+        "currentPrice": 256965,
+        "invest_amount": 1495290.0,
+        "profit": 77500
+    },
+    {
+        "user_id": "user05",
+        "code": "068270",
+        "date": "2026-01-15",
+        "quantity": 25,
+        "buyPrice": 168954,
+        "currentPrice": 171477,
+        "invest_amount": 2534310.0,
+        "profit": 63075
+    },
+    {
+        "user_id": "user04",
+        "code": "068270",
+        "date": "2026-01-10",
+        "quantity": 44,
+        "buyPrice": 166138,
+        "currentPrice": 159198,
+        "invest_amount": 4386043.2,
+        "profit": -305360
+    },
+    {
+        "user_id": "user09",
+        "code": "000660",
+        "date": "2026-01-11",
+        "quantity": 30,
+        "buyPrice": 177822,
+        "currentPrice": 188474,
+        "invest_amount": 3200796.0,
+        "profit": 319560
+    },
+    {
+        "user_id": "user02",
+        "code": "005380",
+        "date": "2026-01-03",
+        "quantity": 41,
+        "buyPrice": 254236,
+        "currentPrice": 256149,
+        "invest_amount": 6254205.6,
+        "profit": 78433
+    },
+    {
+        "user_id": "user09",
+        "code": "035420",
+        "date": "2026-01-09",
+        "quantity": 14,
+        "buyPrice": 189905,
+        "currentPrice": 194845,
+        "invest_amount": 1595202.0,
+        "profit": 69160
+    },
+    {
+        "user_id": "user05",
+        "code": "068270",
+        "date": "2026-01-06",
+        "quantity": 30,
+        "buyPrice": 166933,
+        "currentPrice": 175227,
+        "invest_amount": 3004794.0,
+        "profit": 248820
+    },
+    {
+        "user_id": "user04",
+        "code": "035420",
+        "date": "2026-01-27",
+        "quantity": 30,
+        "buyPrice": 191046,
+        "currentPrice": 195037,
+        "invest_amount": 3438828.0,
+        "profit": 119730
+    },
+    {
+        "user_id": "user06",
+        "code": "005930",
+        "date": "2026-01-08",
+        "quantity": 26,
+        "buyPrice": 68003,
+        "currentPrice": 68976,
+        "invest_amount": 1060846.8,
+        "profit": 25298
+    },
+    {
+        "user_id": "user03",
+        "code": "005380",
+        "date": "2026-01-07",
+        "quantity": 12,
+        "buyPrice": 252394,
+        "currentPrice": 264579,
+        "invest_amount": 1817236.8,
+        "profit": 146220
+    },
+    {
+        "user_id": "user08",
+        "code": "000660",
+        "date": "2026-01-14",
+        "quantity": 32,
+        "buyPrice": 182532,
+        "currentPrice": 188193,
+        "invest_amount": 3504614.4,
+        "profit": 181152
+    },
+    {
+        "user_id": "user07",
+        "code": "035420",
+        "date": "2026-01-13",
+        "quantity": 33,
+        "buyPrice": 186219,
+        "currentPrice": 182674,
+        "invest_amount": 3687136.1999999997,
+        "profit": -116985
+    },
+    {
+        "user_id": "user03",
+        "code": "005380",
+        "date": "2026-01-14",
+        "quantity": 48,
+        "buyPrice": 245480,
+        "currentPrice": 252319,
+        "invest_amount": 7069824.0,
+        "profit": 328272
+    },
+    {
+        "user_id": "user05",
+        "code": "005930",
+        "date": "2026-01-06",
+        "quantity": 22,
+        "buyPrice": 73899,
+        "currentPrice": 66324,
+        "invest_amount": 975466.7999999999,
+        "profit": -166650
+    },
+    {
+        "user_id": "user10",
+        "code": "068270",
+        "date": "2026-01-06",
+        "quantity": 19,
+        "buyPrice": 173167,
+        "currentPrice": 175477,
+        "invest_amount": 1974103.7999999998,
+        "profit": 43890
+    },
+    {
+        "user_id": "user06",
+        "code": "000660",
+        "date": "2026-01-15",
+        "quantity": 48,
+        "buyPrice": 180022,
+        "currentPrice": 179752,
+        "invest_amount": 5184633.6,
+        "profit": -12960
+    },
+    {
+        "user_id": "user03",
+        "code": "005930",
+        "date": "2026-01-15",
+        "quantity": 33,
+        "buyPrice": 69906,
+        "currentPrice": 61571,
+        "invest_amount": 1384138.8,
+        "profit": -275055
+    },
+    {
+        "user_id": "user01",
+        "code": "000660",
+        "date": "2026-01-20",
+        "quantity": 30,
+        "buyPrice": 181977,
+        "currentPrice": 186659,
+        "invest_amount": 3275586.0,
+        "profit": 140460
+    },
+    {
+        "user_id": "user08",
+        "code": "000660",
+        "date": "2026-01-22",
+        "quantity": 15,
+        "buyPrice": 178766,
+        "currentPrice": 173028,
+        "invest_amount": 1608894.0,
+        "profit": -86070
+    },
+    {
+        "user_id": "user07",
+        "code": "005930",
+        "date": "2026-01-12",
+        "quantity": 25,
+        "buyPrice": 73247,
+        "currentPrice": 78442,
+        "invest_amount": 1098705.0,
+        "profit": 129875
+    },
+    {
+        "user_id": "user07",
+        "code": "005380",
+        "date": "2026-01-28",
+        "quantity": 45,
+        "buyPrice": 248864,
+        "currentPrice": 258220,
+        "invest_amount": 6719328.0,
+        "profit": 421020
+    },
+    {
+        "user_id": "user09",
+        "code": "005930",
+        "date": "2026-01-06",
+        "quantity": 39,
+        "buyPrice": 66347,
+        "currentPrice": 70520,
+        "invest_amount": 1552519.8,
+        "profit": 162747
+    },
+    {
+        "user_id": "user02",
+        "code": "035420",
+        "date": "2026-01-25",
+        "quantity": 35,
+        "buyPrice": 188202,
+        "currentPrice": 186569,
+        "invest_amount": 3952242.0,
+        "profit": -57155
+    },
+    {
+        "user_id": "user04",
+        "code": "000660",
+        "date": "2026-01-20",
+        "quantity": 25,
+        "buyPrice": 179566,
+        "currentPrice": 173987,
+        "invest_amount": 2693490.0,
+        "profit": -139475
+    },
+    {
+        "user_id": "user04",
+        "code": "000660",
+        "date": "2026-01-02",
+        "quantity": 17,
+        "buyPrice": 178066,
+        "currentPrice": 169078,
+        "invest_amount": 1816273.2,
+        "profit": -152796
+    },
+    {
+        "user_id": "user09",
+        "code": "035420",
+        "date": "2026-01-07",
+        "quantity": 28,
+        "buyPrice": 192493,
+        "currentPrice": 198276,
+        "invest_amount": 3233882.4,
+        "profit": 161924
+    },
+    {
+        "user_id": "user06",
+        "code": "035420",
+        "date": "2026-01-28",
+        "quantity": 49,
+        "buyPrice": 192399,
+        "currentPrice": 184590,
+        "invest_amount": 5656530.6,
+        "profit": -382641
+    },
+    {
+        "user_id": "user08",
+        "code": "005930",
+        "date": "2026-01-23",
+        "quantity": 1,
+        "buyPrice": 71002,
+        "currentPrice": 85006,
+        "invest_amount": 42601.2,
+        "profit": 14004
+    },
+    {
+        "user_id": "user09",
+        "code": "000660",
+        "date": "2026-01-22",
+        "quantity": 29,
+        "buyPrice": 182706,
+        "currentPrice": 181127,
+        "invest_amount": 3179084.4,
+        "profit": -45791
+    },
+    {
+        "user_id": "user07",
+        "code": "005380",
+        "date": "2026-01-05",
+        "quantity": 33,
+        "buyPrice": 252976,
+        "currentPrice": 254228,
+        "invest_amount": 5008924.8,
+        "profit": 41316
+    },
+    {
+        "user_id": "user05",
+        "code": "005930",
+        "date": "2026-01-10",
+        "quantity": 3,
+        "buyPrice": 70328,
+        "currentPrice": 84168,
+        "invest_amount": 126590.4,
+        "profit": 41520
+    },
+    {
+        "user_id": "user02",
+        "code": "005380",
+        "date": "2026-01-02",
+        "quantity": 5,
+        "buyPrice": 246160,
+        "currentPrice": 238681,
+        "invest_amount": 738480.0,
+        "profit": -37395
+    },
+    {
+        "user_id": "user07",
+        "code": "005930",
+        "date": "2026-01-03",
+        "quantity": 10,
+        "buyPrice": 70985,
+        "currentPrice": 69344,
+        "invest_amount": 425910.0,
+        "profit": -16410
+    },
+    {
+        "user_id": "user07",
+        "code": "000660",
+        "date": "2026-01-23",
+        "quantity": 18,
+        "buyPrice": 183101,
+        "currentPrice": 196383,
+        "invest_amount": 1977490.7999999998,
+        "profit": 239076
+    },
+    {
+        "user_id": "user05",
+        "code": "035420",
+        "date": "2026-01-13",
+        "quantity": 41,
+        "buyPrice": 194974,
+        "currentPrice": 187631,
+        "invest_amount": 4796360.399999999,
+        "profit": -301063
+    },
+    {
+        "user_id": "user09",
+        "code": "035420",
+        "date": "2026-01-02",
+        "quantity": 12,
+        "buyPrice": 193391,
+        "currentPrice": 202712,
+        "invest_amount": 1392415.2,
+        "profit": 111852
+    },
+    {
+        "user_id": "user04",
+        "code": "005380",
+        "date": "2026-01-02",
+        "quantity": 22,
+        "buyPrice": 245614,
+        "currentPrice": 241218,
+        "invest_amount": 3242104.8,
+        "profit": -96712
+    },
+    {
+        "user_id": "user06",
+        "code": "005930",
+        "date": "2026-01-13",
+        "quantity": 21,
+        "buyPrice": 69275,
+        "currentPrice": 61257,
+        "invest_amount": 872865.0,
+        "profit": -168378
+    },
+    {
+        "user_id": "user08",
+        "code": "000660",
+        "date": "2026-01-25",
+        "quantity": 20,
+        "buyPrice": 176744,
+        "currentPrice": 179547,
+        "invest_amount": 2120928.0,
+        "profit": 56060
+    },
+    {
+        "user_id": "user08",
+        "code": "035420",
+        "date": "2026-01-22",
+        "quantity": 50,
+        "buyPrice": 188595,
+        "currentPrice": 183273,
+        "invest_amount": 5657850.0,
+        "profit": -266100
+    },
+    {
+        "user_id": "user05",
+        "code": "000660",
+        "date": "2026-01-31",
+        "quantity": 15,
+        "buyPrice": 181096,
+        "currentPrice": 175603,
+        "invest_amount": 1629864.0,
+        "profit": -82395
+    },
+    {
+        "user_id": "user10",
+        "code": "005380",
+        "date": "2026-01-10",
+        "quantity": 8,
+        "buyPrice": 252510,
+        "currentPrice": 247619,
+        "invest_amount": 1212048.0,
+        "profit": -39128
+    },
+    {
+        "user_id": "user01",
+        "code": "035420",
+        "date": "2026-01-31",
+        "quantity": 39,
+        "buyPrice": 192062,
+        "currentPrice": 196747,
+        "invest_amount": 4494250.8,
+        "profit": 182715
+    },
+    {
+        "user_id": "user02",
+        "code": "005380",
+        "date": "2026-01-25",
+        "quantity": 49,
+        "buyPrice": 252389,
+        "currentPrice": 263923,
+        "invest_amount": 7420236.6,
+        "profit": 565166
+    },
+    {
+        "user_id": "user04",
+        "code": "068270",
+        "date": "2026-01-10",
+        "quantity": 40,
+        "buyPrice": 171524,
+        "currentPrice": 179406,
+        "invest_amount": 4116576.0,
+        "profit": 315280
+    },
+    {
+        "user_id": "user03",
+        "code": "005930",
+        "date": "2026-01-02",
+        "quantity": 30,
+        "buyPrice": 69936,
+        "currentPrice": 67695,
+        "invest_amount": 1258848.0,
+        "profit": -67230
+    },
+    {
+        "user_id": "user07",
+        "code": "035420",
+        "date": "2026-01-18",
+        "quantity": 32,
+        "buyPrice": 186880,
+        "currentPrice": 192438,
+        "invest_amount": 3588096.0,
+        "profit": 177856
+    },
+    {
+        "user_id": "user06",
+        "code": "005380",
+        "date": "2026-01-01",
+        "quantity": 26,
+        "buyPrice": 250525,
+        "currentPrice": 255446,
+        "invest_amount": 3908190.0,
+        "profit": 127946
+    },
+    {
+        "user_id": "user01",
+        "code": "005380",
+        "date": "2026-01-09",
+        "quantity": 29,
+        "buyPrice": 245075,
+        "currentPrice": 239237,
+        "invest_amount": 4264305.0,
+        "profit": -169302
+    },
+    {
+        "user_id": "user09",
+        "code": "035420",
+        "date": "2026-01-20",
+        "quantity": 29,
+        "buyPrice": 194570,
+        "currentPrice": 186799,
+        "invest_amount": 3385518.0,
+        "profit": -225359
+    },
+    {
+        "user_id": "user06",
+        "code": "005380",
+        "date": "2026-01-26",
+        "quantity": 25,
+        "buyPrice": 245461,
+        "currentPrice": 245216,
+        "invest_amount": 3681915.0,
+        "profit": -6125
+    },
+    {
+        "user_id": "user08",
+        "code": "035420",
+        "date": "2026-01-10",
+        "quantity": 4,
+        "buyPrice": 185017,
+        "currentPrice": 191515,
+        "invest_amount": 444040.8,
+        "profit": 25992
+    },
+    {
+        "user_id": "user03",
+        "code": "000660",
+        "date": "2026-01-06",
+        "quantity": 36,
+        "buyPrice": 182077,
+        "currentPrice": 173103,
+        "invest_amount": 3932863.1999999997,
+        "profit": -323064
+    },
+    {
+        "user_id": "user01",
+        "code": "035420",
+        "date": "2026-01-19",
+        "quantity": 28,
+        "buyPrice": 192854,
+        "currentPrice": 198757,
+        "invest_amount": 3239947.1999999997,
+        "profit": 165284
+    },
+    {
+        "user_id": "user04",
+        "code": "005930",
+        "date": "2026-01-30",
+        "quantity": 4,
+        "buyPrice": 72747,
+        "currentPrice": 77938,
+        "invest_amount": 174592.8,
+        "profit": 20764
+    },
+    {
+        "user_id": "user04",
+        "code": "005380",
+        "date": "2026-01-20",
+        "quantity": 50,
+        "buyPrice": 245135,
+        "currentPrice": 255862,
+        "invest_amount": 7354050.0,
+        "profit": 536350
+    },
+    {
+        "user_id": "user07",
+        "code": "035420",
+        "date": "2026-01-27",
+        "quantity": 3,
+        "buyPrice": 185701,
+        "currentPrice": 184341,
+        "invest_amount": 334261.8,
+        "profit": -4080
+    },
+    {
+        "user_id": "user02",
+        "code": "005930",
+        "date": "2026-01-30",
+        "quantity": 35,
+        "buyPrice": 68956,
+        "currentPrice": 81239,
+        "invest_amount": 1448076.0,
+        "profit": 429905
+    },
+    {
+        "user_id": "user05",
+        "code": "068270",
+        "date": "2026-01-01",
+        "quantity": 50,
+        "buyPrice": 165669,
+        "currentPrice": 170552,
+        "invest_amount": 4970070.0,
+        "profit": 244150
+    },
+    {
+        "user_id": "user02",
+        "code": "068270",
+        "date": "2026-01-15",
+        "quantity": 45,
+        "buyPrice": 166412,
+        "currentPrice": 161395,
+        "invest_amount": 4493124.0,
+        "profit": -225765
+    },
+    {
+        "user_id": "user03",
+        "code": "005380",
+        "date": "2026-01-17",
+        "quantity": 29,
+        "buyPrice": 252668,
+        "currentPrice": 247305,
+        "invest_amount": 4396423.2,
+        "profit": -155527
+    },
+    {
+        "user_id": "user09",
+        "code": "035420",
+        "date": "2026-01-03",
+        "quantity": 25,
+        "buyPrice": 186220,
+        "currentPrice": 192552,
+        "invest_amount": 2793300.0,
+        "profit": 158300
+    },
+    {
+        "user_id": "user03",
+        "code": "035420",
+        "date": "2026-01-09",
+        "quantity": 2,
+        "buyPrice": 193524,
+        "currentPrice": 190979,
+        "invest_amount": 232228.8,
+        "profit": -5090
+    },
+    {
+        "user_id": "user08",
+        "code": "005930",
+        "date": "2026-01-26",
+        "quantity": 50,
+        "buyPrice": 67202,
+        "currentPrice": 77345,
+        "invest_amount": 2016060.0,
+        "profit": 507150
+    },
+    {
+        "user_id": "user07",
+        "code": "005930",
+        "date": "2026-01-27",
+        "quantity": 41,
+        "buyPrice": 71612,
+        "currentPrice": 84255,
+        "invest_amount": 1761655.2,
+        "profit": 518363
+    },
+    {
+        "user_id": "user02",
+        "code": "035420",
+        "date": "2026-01-04",
+        "quantity": 38,
+        "buyPrice": 186458,
+        "currentPrice": 191071,
+        "invest_amount": 4251242.399999999,
+        "profit": 175294
+    },
+    {
+        "user_id": "user10",
+        "code": "005930",
+        "date": "2026-01-05",
+        "quantity": 2,
+        "buyPrice": 67774,
+        "currentPrice": 82028,
+        "invest_amount": 81328.8,
+        "profit": 28508
+    },
+    {
+        "user_id": "user08",
+        "code": "005380",
+        "date": "2026-01-30",
+        "quantity": 38,
+        "buyPrice": 249015,
+        "currentPrice": 256037,
+        "invest_amount": 5677542.0,
+        "profit": 266836
+    },
+    {
+        "user_id": "user01",
+        "code": "068270",
+        "date": "2026-01-29",
+        "quantity": 6,
+        "buyPrice": 169984,
+        "currentPrice": 165253,
+        "invest_amount": 611942.4,
+        "profit": -28386
+    }
+]
