@@ -1,0 +1,26 @@
+# Security
+.env
+.env.local
+.secret
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Backup
+DB_bakup/
