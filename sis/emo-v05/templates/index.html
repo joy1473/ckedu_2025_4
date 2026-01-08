@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LUA</title>
+    <meta name="description" content="게으른 달걀과 함께하는 스마트한 트레이딩">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button class="close-sidebar-btn" id="closeSidebar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <button class="new-chat-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    <span class="nav-text">새 채팅</span>
+                </button>
+            </div>
+            <div class="chat-history">
+                <!-- History list removed -->
+            </div>
+            <div class="sidebar-footer">
+                <div style="padding: 0 1rem; font-size: 0.8rem; color: #888;">
+                    &copy; 2026 <a href="#" style="text-decoration: none; color: inherit; font-weight: bold;">LUA</a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Overlay for mobile sidebar -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="app-header">
+                <button class="menu-btn" id="menuBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <h1 class="app-title">LUA</h1>
+
+                <div class="header-actions">
+                    <!-- Profile Container -->
+                    <div class="profile-container" id="profileContainer">
+                        <div class="profile-icon">🐣</div>
+                        <!-- Profile Dropdown -->
+                        <div class="profile-dropdown hidden" id="profileDropdown">
+                            <button class="close-dropdown-btn"
+                                onclick="this.parentElement.classList.add('hidden'); event.stopPropagation();"
+                                style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: inherit; padding: 5px; border-radius: 50%;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                            <p class="section-title">아이콘 선택</p>
+                            <div class="icon-grid" id="iconGrid">
+                                <!-- 10 Random Icons will be injected here -->
+                            </div>
+                            <hr>
+                            <p class="section-title">사용자 전환 (테스트)</p>
+                            <div class="user-select-list">
+                                <button class="user-btn" data-user="User 1">User 1</button>
+                                <button class="user-btn" data-user="User 2">User 2</button>
+                                <button class="user-btn" data-user="User 3">User 3</button>
+                                <button class="user-btn" data-user="User 4">User 4</button>
+                                <button class="user-btn" data-user="User 5">User 5</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Container -->
+                    <div class="settings-container" id="settingsContainer">
+                        <button class="settings-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                </path>
+                            </svg>
+                        </button>
+                        <!-- Settings Dropdown -->
+                        <div class="settings-dropdown hidden" id="settingsDropdown">
+                            <button class="close-dropdown-btn"
+                                onclick="this.parentElement.classList.add('hidden'); event.stopPropagation();"
+                                style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: inherit; padding: 5px; border-radius: 50%;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                            <p class="section-title">테마 설정</p>
+                            <div class="theme-grid">
+                                <button class="theme-circle t-white" data-theme="light"></button>
+                                <button class="theme-circle t-dark" data-theme="dark"></button>
+                                <button class="theme-circle t-pink" data-theme="pink"></button>
+                                <button class="theme-circle t-nav" data-theme="mint"></button>
+                                <button class="theme-circle t-blue" data-theme="blue"></button>
+                                <button class="theme-circle t-purple" data-theme="purple"></button>
+                                <button class="theme-circle t-yellow" data-theme="yellow"></button>
+                            </div>
+                            <div
+                                style="width: 100%; height: 1px; background-color: var(--border-color); margin: 15px 0;">
+                            </div>
+                            <a href="#"
+                                style="display: block; width: 100%; padding: 10px; text-decoration: none; color: inherit; font-size: 0.9rem; border-radius: 8px; transition: background 0.2s;"
+                                onmouseover="this.style.backgroundColor='var(--hover-color)'"
+                                onmouseout="this.style.backgroundColor='transparent'">Admin</a>
+
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Chat Area -->
+            <div class="chat-container" id="chatContainer">
+                <div class="empty-state">
+                    <div class="empty-icon">🍳</div>
+                    <h2>user님, 안녕하세요!</h2>
+                    <p>무엇을 도와드릴까요?</p>
+                </div>
+                <!-- Messages will be appended here -->
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area-wrapper">
+                <div class="input-container">
+                    <textarea id="chatInput" placeholder="메시지를 입력하세요..." rows="1"></textarea>
+                    <button class="icon-btn" id="voiceBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </button>
+                    <button class="icon-btn send-btn" id="sendBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <footer class="app-footer">
+                    <p></p>
+                </footer>
+            </div>
+        </main>
+    </div>
+    <script src="/static/script.js"></script>
+
+
+</body>
+
+</html>

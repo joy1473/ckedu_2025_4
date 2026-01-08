@@ -1,0 +1,177 @@
+<!-- saved from url=(0075)http://127.0.0.1:8000/apiEsc/get_chartHtml?in_chartType=01&in_userIds=user1 -->
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Base styles reset for injection */
+    html,
+    body {
+      height: auto;
+      margin: 0;
+      padding: 0;
+      overflow: visible;
+    }
+
+    .chart-wrapper {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: sans-serif;
+      border-radius: 8px;
+      overflow: visible;
+      width: 100%;
+      height: auto;
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #chart-area {
+      width: 100%;
+      height: auto;
+      min-height: 300px;
+      flex-shrink: 0;
+    }
+
+    .js-plotly-plot {
+      width: 100% !important;
+    }
+
+    #table-wrapper {
+      background: #1e293b;
+      border-top: 1px solid #334155;
+      width: 100%;
+      overflow-x: hidden;
+      /* Hide scroll X */
+    }
+
+    .display-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      /* Smaller font for mobile */
+      table-layout: fixed;
+      /* Force fit */
+    }
+
+    .display-table th {
+      background: #334155;
+      padding: 8px 4px;
+      text-align: center;
+      color: #ffffff;
+      border-bottom: 2px solid #475569;
+      font-size: 11px;
+    }
+
+    .display-table td {
+      padding: 8px 4px;
+      text-align: center;
+      border-bottom: 1px solid #334155;
+      word-break: break-all;
+      /* Prevent overflow */
+      color: #ffffff;
+    }
+
+    .display-table td:nth-child(3),
+    .display-table td:nth-child(4) {
+      text-align: right;
+      padding-right: 10px;
+    }
+
+    tr:hover {
+      background: #2d3748;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="chart-wrapper">
+    <div id="chart-area">
+      <div>
+        <script type="text/javascript">window.PlotlyConfig = { MathJaxConfig: 'local' };</script>
+        <script charset="utf-8" src="./get_chartHtml_files/plotly-3.3.1.min.js.다운로드"></script>
+
+        <!-- Plotly Chart Div -->
+        <div id="4814a4b5-d451-4f6c-90ba-e0ad8a965722" class="plotly-graph-div js-plotly-plot" style="width:100%;">
+        </div>
+      </div>
+
+      <script type="text/javascript">
+        window.PLOTLYENV = window.PLOTLYENV || {};
+        if (document.getElementById("4814a4b5-d451-4f6c-90ba-e0ad8a965722")) {
+          Plotly.newPlot(
+            "4814a4b5-d451-4f6c-90ba-e0ad8a965722",
+            [
+              { "alignmentgroup": "True", "hovertemplate": "종목명=068270<br>거래일자=%{x}<br>체결수량=%{y}<extra></extra>", "legendgroup": "068270", "marker": { "color": "#636efa", "pattern": { "shape": "" } }, "name": "068270", "offsetgroup": "068270", "orientation": "v", "showlegend": true, "textposition": "auto", "x": ["2026-01-02T00:00:00", "2026-01-05T00:00:00"], "xaxis": "x", "y": { "dtype": "i1", "bdata": "Ex4=" }, "yaxis": "y", "type": "bar" },
+              { "alignmentgroup": "True", "hovertemplate": "종목명=005930<br>거래일자=%{x}<br>체결수량=%{y}<extra></extra>", "legendgroup": "005930", "marker": { "color": "#EF553B", "pattern": { "shape": "" } }, "name": "005930", "offsetgroup": "005930", "orientation": "v", "showlegend": true, "textposition": "auto", "x": ["2026-01-03T00:00:00"], "xaxis": "x", "y": { "dtype": "i1", "bdata": "Ag==" }, "yaxis": "y", "type": "bar" },
+              { "alignmentgroup": "True", "hovertemplate": "종목명=000660<br>거래일자=%{x}<br>체결수량=%{y}<extra></extra>", "legendgroup": "000660", "marker": { "color": "#00cc96", "pattern": { "shape": "" } }, "name": "000660", "offsetgroup": "000660", "orientation": "v", "showlegend": true, "textposition": "auto", "x": ["2026-01-06T00:00:00"], "xaxis": "x", "y": { "dtype": "i1", "bdata": "Mg==" }, "yaxis": "y", "type": "bar" },
+              { "alignmentgroup": "True", "hovertemplate": "종목명=005380<br>거래일자=%{x}<br>체결수량=%{y}<extra></extra>", "legendgroup": "005380", "marker": { "color": "#ab63fa", "pattern": { "shape": "" } }, "name": "005380", "offsetgroup": "005380", "orientation": "v", "showlegend": true, "textposition": "auto", "x": ["2026-01-07T00:00:00"], "xaxis": "x", "y": { "dtype": "i1", "bdata": "LQ==" }, "yaxis": "y", "type": "bar" }
+            ],
+            {
+              "barmode": "group",
+              "autosize": true,
+              "margin": { "b": 40, "l": 30, "r": 10, "t": 100 },
+              "legend": { "orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1 },
+              "paper_bgcolor": "#0f172a",
+              "plot_bgcolor": "#0f172a",
+              "font": { "color": "#f2f5fa" },
+              "xaxis": { "automargin": true, "gridcolor": "#283442", "linecolor": "#506784", "ticks": "", "title": { "standoff": 15 }, "zerolinecolor": "#283442", "zerolinewidth": 2 },
+              "yaxis": { "automargin": true, "gridcolor": "#283442", "linecolor": "#506784", "ticks": "", "title": { "standoff": 15 }, "zerolinecolor": "#283442", "zerolinewidth": 2 },
+              "title": { "font": { "size": 18 }, "text": "📊 종목별 체결수량 추이", "x": 0.5, "pad": { "b": 20 } }
+            },
+            { "responsive": true, "displayModeBar": false }
+          )
+        };
+      </script>
+    </div>
+
+    <div id="table-wrapper">
+      <table border="0" class="dataframe display-table">
+        <thead>
+          <tr>
+            <th>일자</th>
+            <th>종목</th>
+            <th>수량</th>
+            <th>손익</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>01-02</td>
+            <td>068270</td>
+            <td>19</td>
+            <td><span style="color:#ff4d4d; font-weight:bold;">+249K</span></td>
+          </tr>
+          <tr>
+            <td>01-03</td>
+            <td>005930</td>
+            <td>2</td>
+            <td><span style="color:#4d94ff; font-weight:bold;">-946</span></td>
+          </tr>
+          <tr>
+            <td>01-05</td>
+            <td>068270</td>
+            <td>30</td>
+            <td><span style="color:#4d94ff; font-weight:bold;">-137K</span></td>
+          </tr>
+          <tr>
+            <td>01-06</td>
+            <td>000660</td>
+            <td>50</td>
+            <td><span style="color:#ff4d4d; font-weight:bold;">+416K</span></td>
+          </tr>
+          <tr>
+            <td>01-07</td>
+            <td>005380</td>
+            <td>45</td>
+            <td><span style="color:#ff4d4d; font-weight:bold;">+508K</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+
+</html>
