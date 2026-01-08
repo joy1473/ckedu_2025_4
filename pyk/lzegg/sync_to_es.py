@@ -20,10 +20,18 @@ es = Elasticsearch(
 )
 
 def sync_data():
+    # stock_master 동기화 로직# 동기화 전에 기존 인덱스를 삭제하여 과거의 오염된 데이터를 완전히 제거합니다.
+    indices_to_reset = ["stock_master", "trade_summary"]
+    for idx in indices_to_reset:
+        if es.indices.exists(index=idx):
+            es.indices.delete(index=idx)
+            print(f"🗑️ 기존 인덱스 삭제 완료: {idx}")
+        # 인덱스 재생성 (필요 시)
+        es.indices.create(index=idx)
+
     actions = []
     print("📋 1. stock_master 데이터 동기화 시작...")
     
-    # stock_master 동기화 로직
     master_cursor = db['stock_master'].find()
     stocks_for_summary = {}
 
