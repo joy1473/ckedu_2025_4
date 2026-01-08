@@ -41,11 +41,20 @@ OPENBANK_REDIRECT_URI = "http://localhost:5050/auth/callback/"
 ACCESS_TOKEN = f"{OPEN_BANKING_URL}/oauth/2.0/token"
 
 # 엘라스틱서치 연결 설정
-es = Elasticsearch(
-    ["http://172.26.117.88:9200"],
-    headers={"Accept": "application/vnd.elasticsearch+json; compatible-with=7"},
-    verify_certs=False
-)
+try:
+    es = Elasticsearch(
+        ["http://172.26.117.88:9200"],
+        headers={"Accept": "application/vnd.elasticsearch+json; compatible-with=7"},
+        verify_certs=False,
+        request_timeout=3 # 연결 시도 시간 제한 (무한 대기 방지)
+    )
+    # 실제 연결이 유효한지 핑(ping)으로 확인
+    if not es.ping():
+        print("⚠️ ES 서버에 응답이 없습니다. 관련 기능을 비활성화합니다.")
+        es = None
+except Exception as e:
+    print(f"❌ ES 연결 중 예외 발생: {e}")
+    es = None
 
 # --- [추가] 오픈뱅킹 API 호출 함수 ---
 async def fetch_openbank_transactions(user_id: str, start_date: str, end_date: str):
@@ -109,6 +118,10 @@ def get_stock_name_map():
     # 출력 : name_map - 종목코드:종목명 딕셔너리
     # 소스 : 엘라스틱서치 stock_master
     """
+    """ ES 연결이 없어도 에러 없이 빈 딕셔너리 반환 """
+    if es is None:
+        print("⚠️ ES 미연결 상태: 종목명 매핑을 건너뜁니다.")
+        return {}
     try:
         if not es.indices.exists(index="stock_master"):
             return {}
@@ -157,6 +170,11 @@ def get_top_user_data():
     # 출력 : top_user_id - 1위 사용자ID, df - 해당 유저의 상세 데이터프레임
     # 소스 : 엘라스틱서치 trade_summary
     """
+    """ ES 연결 실패 시 None과 빈 DF 반환 """
+    if es is None:
+        print("⚠️ ES 미연결 상태: TOP 유저 조회가 불가능합니다.")
+        return None, pd.DataFrame()
+    
     TARGET_INDEX = "trade_summary"
     try:
         if not es.indices.exists(index=TARGET_INDEX):
@@ -250,6 +268,11 @@ def get_user_report_data(target_user_id):
     # 출력 : df - 가공된 상세 거래 데이터프레임
     # 소스 : 엘라스틱서치 trade_summary
     """
+    """ ES 연결 실패 시 None과 빈 DF 반환 """
+    if es is None:
+        print("⚠️ ES 미연결 상태: TOP 유저 조회가 불가능합니다.")
+        return None, pd.DataFrame()
+    
     TARGET_INDEX = "trade_summary"
     try:
         # [중요] 만약 target_user_id가 Request 객체인 경우를 대비해 문자열로 강제 변환
